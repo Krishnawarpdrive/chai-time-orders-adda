@@ -3,12 +3,22 @@ import React, { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import OrdersTable from '@/components/OrdersTable';
 import { orderData } from '@/lib/data';
-import { Bell } from 'lucide-react';
+import { Bell, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const [orders, setOrders] = useState(orderData);
+  const { toast } = useToast();
+
+  const handleNewOrder = () => {
+    toast({
+      title: "New Order",
+      description: "Creating a new order...",
+    });
+    // Here you would normally open a modal or navigate to a new order page
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -43,7 +53,11 @@ const Index = () => {
                 <h2 className="font-hackney text-3xl text-coffee-green mb-1">Orders List</h2>
                 <p className="text-gray-600 text-sm">ಬಿಸಿ ಬಿಸಿ ಆರ್ಡರ್‌ಗಳು! Manage your hot orders here.</p>
               </div>
-              <Button className="mt-4 sm:mt-0 bg-bisi-orange hover:bg-bisi-orange/90">
+              <Button 
+                className="mt-4 sm:mt-0 bg-bisi-orange hover:bg-bisi-orange/90"
+                onClick={handleNewOrder}
+              >
+                <Plus className="h-4 w-4 mr-1" />
                 New Order
               </Button>
             </div>

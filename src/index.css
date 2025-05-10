@@ -118,4 +118,12 @@
   .status-badge {
     @apply px-2.5 py-0.5 rounded-full text-xs font-medium inline-flex items-center justify-center;
   }
+  
+  .loyalty-badge {
+    @apply inline-flex items-center justify-center text-xs font-medium;
+  }
+  
+  .payment-badge {
+    @apply inline-flex items-center text-xs font-medium;
+  }
 }
