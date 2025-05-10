@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { OrderItem } from '@/lib/data';
-import { Coffee, Biscuit, Tea } from 'lucide-react';
+import { Coffee, Cookie, Leaf } from 'lucide-react';
 
 interface OrderItemsListProps {
   items: OrderItem[];
@@ -18,9 +18,9 @@ export function OrderItemsList({ items }: OrderItemsListProps) {
     if (lowercaseName.includes('coffee')) {
       return <Coffee className="w-4 h-4 text-coffee-green" />;
     } else if (lowercaseName.includes('biscuit')) {
-      return <Biscuit className="w-4 h-4 text-bisi-orange" />;
+      return <Cookie className="w-4 h-4 text-bisi-orange" />;
     } else if (lowercaseName.includes('tea') || lowercaseName.includes('chai')) {
-      return <Tea className="w-4 h-4 text-coffee-green" />;
+      return <Leaf className="w-4 h-4 text-coffee-green" />;
     }
     return null;
   };
