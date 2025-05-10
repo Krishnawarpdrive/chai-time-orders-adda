@@ -154,16 +154,6 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                       <Check className="h-4 w-4 mr-1" />
                       Finish Making
                     </ToggleGroupItem>
-                    
-                    <ToggleGroupItem 
-                      value="HandOver" 
-                      aria-label="Hand Over"
-                      onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')}
-                      className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
-                    >
-                      <ArrowRight className="h-4 w-4 mr-1" />
-                      Hand Over
-                    </ToggleGroupItem>
                   </ToggleGroup>
                 </TableCell>
               </TableRow>
@@ -190,7 +180,7 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                                 <td className="py-2 pl-1">{order.customerName}</td>
                                 <td className="py-2 text-center">{order.quantity}</td>
                                 <td className="py-2 text-right pr-1">
-                                  {order.status !== 'Handed Over' ? (
+                                  {item.status === 'Finished' && order.status !== 'Handed Over' ? (
                                     <Button 
                                       size="sm" 
                                       variant="outline" 
@@ -200,7 +190,7 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                                       <ArrowRight className="h-3 w-3 mr-1" />
                                       Hand Over
                                     </Button>
-                                  ) : (
+                                  ) : order.status === 'Handed Over' ? (
                                     <Button 
                                       size="sm" 
                                       variant="ghost" 
@@ -209,6 +199,15 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                                     >
                                       <Check className="h-3 w-3 mr-1" />
                                       Handed Over
+                                    </Button>
+                                  ) : (
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="text-xs py-1 h-14 text-gray-400"
+                                      disabled
+                                    >
+                                      Finish Item First
                                     </Button>
                                   )}
                                 </td>

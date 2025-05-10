@@ -97,51 +97,36 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
                 <td className="py-2 text-center">{item.quantity}</td>
                 <td className="py-2 text-center">{getStatusBadge(item.status)}</td>
                 <td className="py-2 text-right pr-1">
-                  <ToggleGroup type="single" value={item.status} className="justify-end">
-                    {item.status === 'Not Started' && (
-                      <ToggleGroupItem
-                        value="Started"
-                        aria-label="Start Making"
-                        onClick={() => updateItemStatus(item.id, 'Started')}
-                        className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
-                      >
-                        <Play className="h-3 w-3 mr-1" />
-                        Start Making
-                      </ToggleGroupItem>
-                    )}
-                    {item.status === 'Started' && (
-                      <ToggleGroupItem
-                        value="Finished"
-                        aria-label="Finish Making"
-                        onClick={() => updateItemStatus(item.id, 'Finished')}
-                        className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
-                      >
-                        <Check className="h-3 w-3 mr-1" />
-                        Finish Making
-                      </ToggleGroupItem>
-                    )}
-                    {item.status === 'Finished' && (
-                      <ToggleGroupItem
-                        value="Ready for Hand Over"
-                        aria-label="Ready for Hand Over"
-                        onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')}
-                        className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
-                      >
-                        <ArrowRight className="h-3 w-3 mr-1" />
-                        Hand Over
-                      </ToggleGroupItem>
-                    )}
-                    {item.status === 'Ready for Hand Over' && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-xs h-14 text-green-800 bg-green-100 font-medium" 
-                        disabled
-                      >
-                        <Check className="h-3 w-3 mr-1" />
-                        Handed Over
-                      </Button>
-                    )}
+                  <ToggleGroup type="single" className="justify-end">
+                    <ToggleGroupItem
+                      value="Started"
+                      aria-label="Start Making"
+                      onClick={() => updateItemStatus(item.id, 'Started')}
+                      className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                    >
+                      <Play className="h-3 w-3 mr-1" />
+                      Start Making
+                    </ToggleGroupItem>
+                    
+                    <ToggleGroupItem
+                      value="Finished"
+                      aria-label="Finish Making"
+                      onClick={() => updateItemStatus(item.id, 'Finished')}
+                      className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      Finish Making
+                    </ToggleGroupItem>
+                    
+                    <ToggleGroupItem
+                      value="Ready for Hand Over"
+                      aria-label="Ready for Hand Over"
+                      onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')}
+                      className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                    >
+                      <ArrowRight className="h-3 w-3 mr-1" />
+                      Hand Over
+                    </ToggleGroupItem>
                   </ToggleGroup>
                 </td>
               </tr>
