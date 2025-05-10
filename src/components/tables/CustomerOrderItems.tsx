@@ -4,7 +4,6 @@ import { OrderItem } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Coffee, Cookie, Leaf, Play, Check, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type ItemStatus = 'Not Started' | 'Started' | 'Finished' | 'Ready for Hand Over';
 
@@ -101,6 +100,7 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
                     <Button
                       onClick={() => updateItemStatus(item.id, 'Started')}
                       className="h-12 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90"
+                      disabled={item.status !== 'Not Started' && item.status !== 'Started'}
                     >
                       <Play className="h-4 w-4 mr-1" />
                       Start Making
@@ -109,6 +109,7 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
                     <Button
                       onClick={() => updateItemStatus(item.id, 'Finished')}
                       className="h-12 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                      disabled={item.status === 'Not Started' || item.status === 'Ready for Hand Over'}
                     >
                       <Check className="h-4 w-4 mr-1" />
                       Finish Making
@@ -117,6 +118,7 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
                     <Button
                       onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')}
                       className="h-12 font-medium bg-milk-sugar text-coffee-green hover:bg-milk-sugar/90"
+                      disabled={item.status !== 'Finished' && item.status !== 'Ready for Hand Over'}
                     >
                       <ArrowRight className="h-4 w-4 mr-1" />
                       Hand Over
