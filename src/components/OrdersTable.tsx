@@ -1,21 +1,12 @@
 
 import React, { useState } from 'react';
 import { Order, OrderStatus } from '@/lib/data';
-import StatusBadge from './StatusBadge';
-import LoyaltyBadge from './LoyaltyBadge';
-import PaymentBadge from './PaymentBadge';
-import OrderActions from './OrderActions';
-import OrderItemsList from './OrderItemsList';
-import { ArrowDown, ArrowUp, Search, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { FilterDropdown } from './FilterDropdown';
 import { cn } from '@/lib/utils';
-import { 
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import OrdersTableHeader from './table/OrdersTableHeader';
+import OrdersTableRow from './table/OrdersTableRow';
+import OrdersEmptyState from './table/OrdersEmptyState';
+import OrdersPagination from './table/OrdersPagination';
+import OrdersSearchFilter from './table/OrdersSearchFilter';
 
 interface OrdersTableProps {
   orders: Order[];
@@ -53,6 +44,11 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
     setOrders(orders.map(order => 
       order.orderId === orderId ? { ...order, status: newStatus } : order
     ));
+  };
+
+  // Reset orders
+  const resetOrders = () => {
+    setOrders([...initialOrders]);
   };
 
   // Handle sorting
@@ -95,6 +91,7 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
   const currentOrders = sortedOrders.slice(indexOfFirstOrder, indexOfLastOrder);
   const totalPages = Math.ceil(sortedOrders.length / ordersPerPage);
 
+  // Formatting utilities
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-IN', {
@@ -119,229 +116,51 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
 
   return (
     <div className="w-full">
-      <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        {/* Search and Filter Section */}
-        <div className="relative flex items-center w-full sm:w-auto">
-          <Search className="absolute left-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            type="text"
-            placeholder="Search orders..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-full sm:w-64"
-          />
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <FilterDropdown value={filterValue} onValueChange={setFilterValue} />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setOrders([...initialOrders])}
-            className="bg-white"
-            title="Refresh orders"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <OrdersSearchFilter 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        filterValue={filterValue}
+        setFilterValue={setFilterValue}
+        resetOrders={resetOrders}
+      />
 
       {/* Table Section */}
       <div className="w-full overflow-x-auto rounded-lg border border-gray-200 bg-white shadow">
         <table className="w-full min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="w-10"></th> {/* Expansion column */}
-              <th 
-                className="table-cell-padding text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('id')}
-              >
-                <div className="flex items-center">
-                  Order ID
-                  {sortField === 'id' && (
-                    sortDirection === 'asc' ? 
-                      <ArrowUp className="ml-1 h-3 w-3" /> : 
-                      <ArrowDown className="ml-1 h-3 w-3" />
-                  )}
-                </div>
-              </th>
-              <th 
-                className="table-cell-padding text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('date')}
-              >
-                <div className="flex items-center">
-                  Date
-                  {sortField === 'date' && (
-                    sortDirection === 'asc' ? 
-                      <ArrowUp className="ml-1 h-3 w-3" /> : 
-                      <ArrowDown className="ml-1 h-3 w-3" />
-                  )}
-                </div>
-              </th>
-              <th className="table-cell-padding text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Customer
-              </th>
-              <th className="table-cell-padding text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th 
-                className="table-cell-padding text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('amount')}
-              >
-                <div className="flex items-center">
-                  Amount
-                  {sortField === 'amount' && (
-                    sortDirection === 'asc' ? 
-                      <ArrowUp className="ml-1 h-3 w-3" /> : 
-                      <ArrowDown className="ml-1 h-3 w-3" />
-                  )}
-                </div>
-              </th>
-              <th className="table-cell-padding text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Payment
-              </th>
-              <th className="table-cell-padding text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
+          <OrdersTableHeader 
+            sortField={sortField}
+            sortDirection={sortDirection}
+            handleSort={handleSort}
+          />
           <tbody className="bg-white divide-y divide-gray-200">
             {currentOrders.length > 0 ? (
               currentOrders.map((order) => (
-                <React.Fragment key={order.id}>
-                  <tr className={cn("hover-row", isRowExpanded(order.id) ? "bg-milk-sugar/20" : "")}>
-                    <td className="px-2 py-3">
-                      <Collapsible open={isRowExpanded(order.id)}>
-                        <CollapsibleTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 rounded-full" 
-                            onClick={() => toggleRowExpansion(order.id)}
-                          >
-                            {isRowExpanded(order.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                          </Button>
-                        </CollapsibleTrigger>
-                      </Collapsible>
-                    </td>
-                    <td className="table-cell-padding text-sm text-coffee-green font-medium">
-                      {order.orderId}
-                      <div className="text-xs text-gray-500 mt-1">
-                        {getItemCountText(order.items)}
-                      </div>
-                    </td>
-                    <td className="table-cell-padding text-sm text-gray-700">{formatDate(order.date)}</td>
-                    <td className="table-cell-padding text-sm text-gray-700">
-                      <div className="flex items-center">
-                        {order.customer}
-                        <LoyaltyBadge loyalty={order.customerLoyalty} />
-                      </div>
-                    </td>
-                    <td className="table-cell-padding">
-                      <StatusBadge status={order.status} />
-                    </td>
-                    <td className="table-cell-padding text-sm text-gray-700">{formatAmount(order.amount)}</td>
-                    <td className="table-cell-padding">
-                      <PaymentBadge type={order.paymentType} />
-                    </td>
-                    <td className="table-cell-padding">
-                      <OrderActions 
-                        orderId={order.orderId} 
-                        status={order.status} 
-                        onStatusChange={handleStatusChange} 
-                      />
-                    </td>
-                  </tr>
-                  <tr className={cn(isRowExpanded(order.id) ? "" : "hidden")}>
-                    <td colSpan={8} className="p-0">
-                      <Collapsible open={isRowExpanded(order.id)}>
-                        <CollapsibleContent>
-                          <div className="px-4">
-                            <OrderItemsList items={order.items} />
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </td>
-                  </tr>
-                </React.Fragment>
+                <OrdersTableRow
+                  key={order.id}
+                  order={order}
+                  isExpanded={isRowExpanded(order.id)}
+                  toggleRowExpansion={toggleRowExpansion}
+                  formatDate={formatDate}
+                  formatAmount={formatAmount}
+                  getItemCountText={getItemCountText}
+                  handleStatusChange={handleStatusChange}
+                />
               ))
             ) : (
-              <tr>
-                <td colSpan={8} className="table-cell-padding text-center text-sm text-gray-500 py-8">
-                  <div className="flex flex-col items-center">
-                    <p className="mb-1">No orders found</p>
-                    <p className="text-xs">Try adjusting your search or filter</p>
-                  </div>
-                </td>
-              </tr>
+              <OrdersEmptyState />
             )}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-sm text-gray-600">
-          Showing {indexOfFirstOrder + 1} to {Math.min(indexOfLastOrder, sortedOrders.length)} of {sortedOrders.length} orders
-        </p>
-        
-        <div className="flex space-x-1">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
-            className={cn(
-              "flex items-center px-2 py-1 text-sm rounded",
-              currentPage === 1 ? "opacity-50 cursor-not-allowed" : "bg-white"
-            )}
-          >
-            Previous
-          </Button>
-          
-          {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => {
-            // Logic to show pages around the current page
-            let pageNum;
-            if (totalPages <= 3) {
-              pageNum = i + 1;
-            } else if (currentPage <= 2) {
-              pageNum = i + 1;
-            } else if (currentPage >= totalPages - 1) {
-              pageNum = totalPages - 2 + i;
-            } else {
-              pageNum = currentPage - 1 + i;
-            }
-            
-            return (
-              <Button
-                key={pageNum}
-                variant={currentPage === pageNum ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(pageNum)}
-                className={cn(
-                  "px-3 py-1 text-sm rounded",
-                  currentPage === pageNum ? "bg-coffee-green text-white" : "bg-white"
-                )}
-              >
-                {pageNum}
-              </Button>
-            );
-          })}
-          
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage >= totalPages}
-            onClick={() => setCurrentPage(currentPage + 1)}
-            className={cn(
-              "flex items-center px-2 py-1 text-sm rounded",
-              currentPage >= totalPages ? "opacity-50 cursor-not-allowed" : "bg-white"
-            )}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+      <OrdersPagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        indexOfFirstOrder={indexOfFirstOrder}
+        indexOfLastOrder={indexOfLastOrder}
+        totalOrders={sortedOrders.length}
+        setCurrentPage={setCurrentPage}
+      />
     </div>
   );
 }
