@@ -8,16 +8,47 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CustomerView } from '@/components/views/CustomerView';
 import { ItemView } from '@/components/views/ItemView';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import CustomerOrderDetails from '@/components/CustomerOrderDetails';
+import { OrderItem } from '@/lib/data';
 
 const Index = () => {
   const { toast } = useToast();
+  const [isNewOrderDialogOpen, setIsNewOrderDialogOpen] = useState(false);
+
+  // Mock data for new order
+  const mockNewOrderItems: OrderItem[] = [
+    {
+      id: 1,
+      name: "Cappuccino",
+      price: 100,
+      quantity: 2
+    },
+    {
+      id: 2,
+      name: "Masala Chai",
+      price: 80,
+      quantity: 1
+    },
+    {
+      id: 3,
+      name: "Filter Coffee",
+      price: 90,
+      quantity: 2
+    }
+  ];
 
   const handleNewOrder = () => {
     toast({
       title: "New Order",
       description: "Creating a new order...",
     });
-    // Here you would normally open a modal or navigate to a new order page
+    setIsNewOrderDialogOpen(true);
+  };
+
+  const handleStatusChange = (orderId: string, itemId: number, newStatus: string) => {
+    console.log(`Order ${orderId} Item ${itemId} status changed to ${newStatus}`);
+    // In a real app, this would update the order status in your backend
   };
 
   return (
@@ -81,6 +112,21 @@ const Index = () => {
           </div>
         </main>
       </div>
+
+      {/* New Order Dialog */}
+      <Dialog open={isNewOrderDialogOpen} onOpenChange={setIsNewOrderDialogOpen}>
+        <DialogContent className="p-0 max-w-6xl">
+          <CustomerOrderDetails
+            customerName="Ankita Sharma"
+            phoneNumber="+91 98 *** ***76"
+            dob="21 Apr 1992"
+            items={mockNewOrderItems}
+            orderId="NEW-ORD-001"
+            onStatusChange={handleStatusChange}
+            onClose={() => setIsNewOrderDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
