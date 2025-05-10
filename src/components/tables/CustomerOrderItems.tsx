@@ -4,6 +4,7 @@ import { OrderItem } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Coffee, Cookie, Leaf, Play, Check, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type ItemStatus = 'Not Started' | 'Started' | 'Finished' | 'Ready for Hand Over';
 
@@ -67,62 +68,6 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
     }
   };
 
-  // Get appropriate actions based on status
-  const getActions = (item: OrderItemWithStatus) => {
-    switch (item.status) {
-      case 'Not Started':
-        return (
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="text-xs py-1 h-7"
-            onClick={() => updateItemStatus(item.id, 'Started')}
-          >
-            <Play className="h-3 w-3 mr-1" />
-            Start Making
-          </Button>
-        );
-      case 'Started':
-        return (
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="text-xs py-1 h-7"
-            onClick={() => updateItemStatus(item.id, 'Finished')}
-          >
-            <Check className="h-3 w-3 mr-1" />
-            Finish Making
-          </Button>
-        );
-      case 'Finished':
-        return (
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="text-xs py-1 h-7 bg-green-50"
-            onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')}
-          >
-            <ArrowRight className="h-3 w-3 mr-1" />
-            Hand Over
-          </Button>
-        );
-      case 'Ready for Hand Over':
-        return (
-          <Button 
-            size="sm" 
-            variant="ghost" 
-            className="text-xs py-1 h-7 text-green-800 bg-green-100"
-            disabled
-          >
-            <Check className="h-3 w-3 mr-1" />
-            Handed Over
-          </Button>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="py-2 px-4 bg-white rounded-md border border-gray-200 mt-2 mb-2 animate-fade-in">
       <h4 className="text-sm font-medium text-coffee-green mb-2">Order Details</h4>
@@ -153,7 +98,54 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
                 <td className="py-2">{customerName}</td>
                 <td className="py-2 text-center">{item.quantity}</td>
                 <td className="py-2 text-center">{getStatusBadge(item.status)}</td>
-                <td className="py-2 text-right pr-1">{getActions(item)}</td>
+                <td className="py-2 text-right pr-1">
+                  <ToggleGroup type="single" value={item.status} className="justify-end">
+                    {item.status === 'Not Started' && (
+                      <ToggleGroupItem
+                        value="Started"
+                        aria-label="Start Making"
+                        onClick={() => updateItemStatus(item.id, 'Started')}
+                        className="border border-gray-200 h-14 font-medium bg-white text-gray-700 hover:bg-yellow-50"
+                      >
+                        <Play className="h-3 w-3 mr-1" />
+                        Start Making
+                      </ToggleGroupItem>
+                    )}
+                    {item.status === 'Started' && (
+                      <ToggleGroupItem
+                        value="Finished"
+                        aria-label="Finish Making"
+                        onClick={() => updateItemStatus(item.id, 'Finished')}
+                        className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                      >
+                        <Check className="h-3 w-3 mr-1" />
+                        Finish Making
+                      </ToggleGroupItem>
+                    )}
+                    {item.status === 'Finished' && (
+                      <ToggleGroupItem
+                        value="Ready for Hand Over"
+                        aria-label="Ready for Hand Over"
+                        onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')}
+                        className="border border-gray-200 h-14 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90"
+                      >
+                        <ArrowRight className="h-3 w-3 mr-1" />
+                        Hand Over
+                      </ToggleGroupItem>
+                    )}
+                    {item.status === 'Ready for Hand Over' && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs h-14 text-green-800 bg-green-100 font-medium" 
+                        disabled
+                      >
+                        <Check className="h-3 w-3 mr-1" />
+                        Handed Over
+                      </Button>
+                    )}
+                  </ToggleGroup>
+                </td>
               </tr>
             ))}
           </tbody>

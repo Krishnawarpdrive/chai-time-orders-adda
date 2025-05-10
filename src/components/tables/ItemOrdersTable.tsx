@@ -134,14 +134,16 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                 </TableCell>
                 <TableCell className="text-center">{item.totalQuantity}</TableCell>
                 <TableCell>
-                  <ToggleGroup type="single" value={item.status}>
+                  <ToggleGroup type="single" value={item.status} className="h-14">
                     <ToggleGroupItem 
                       value="Started" 
                       aria-label="Start Making"
                       onClick={() => updateItemStatus(item.id, 'Started')}
                       className={cn(
-                        "border border-gray-200",
-                        item.status === 'Started' ? "bg-yellow-100 text-yellow-800" : ""
+                        "border border-gray-200 h-14 font-medium",
+                        item.status === 'Started' 
+                          ? "bg-yellow-600 text-white hover:bg-yellow-700" 
+                          : "bg-white text-gray-700 hover:bg-yellow-50"
                       )}
                     >
                       <Play className="h-4 w-4 mr-1" />
@@ -152,8 +154,10 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                       aria-label="Finish Making"
                       onClick={() => updateItemStatus(item.id, 'Finished')}
                       className={cn(
-                        "border border-gray-200",
-                        item.status === 'Finished' ? "bg-blue-100 text-blue-800" : ""
+                        "border border-gray-200 h-14 font-medium",
+                        item.status === 'Finished' 
+                          ? "bg-coffee-green text-white hover:bg-coffee-green/90" 
+                          : "bg-white text-gray-700 hover:bg-green-50"
                       )}
                     >
                       <Check className="h-4 w-4 mr-1" />
@@ -191,7 +195,7 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                                     <Button 
                                       size="sm" 
                                       variant="outline" 
-                                      className="text-xs py-1 h-7 bg-green-50"
+                                      className="text-xs py-1 h-14 bg-green-50 font-medium"
                                       onClick={() => updateCustomerOrderStatus(item.id, order.orderId, 'Handed Over')}
                                     >
                                       <ArrowRight className="h-3 w-3 mr-1" />
@@ -201,7 +205,7 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                                     <Button 
                                       size="sm" 
                                       variant="ghost" 
-                                      className="text-xs py-1 h-7 text-green-800 bg-green-100"
+                                      className="text-xs py-1 h-14 text-green-800 bg-green-100 font-medium"
                                       disabled
                                     >
                                       <Check className="h-3 w-3 mr-1" />
