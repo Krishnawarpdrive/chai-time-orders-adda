@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Order, OrderStatus } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import StatusBadge from '@/components/StatusBadge';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Play, Check, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CustomerOrderItems from '@/components/tables/CustomerOrderItems';
 import OrdersPagination from '@/components/table/OrdersPagination';
@@ -20,6 +20,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface CustomerOrdersTableProps {
   orders: Order[];
@@ -41,6 +42,9 @@ const CustomerOrdersTable = ({
   setCurrentPage
 }: CustomerOrdersTableProps) => {
   const [expandedRows, setExpandedRows] = useState<number[]>([]);
+  const [orderStatuses, setOrderStatuses] = useState<Record<string, OrderStatus>>(
+    orders.reduce((acc, order) => ({ ...acc, [order.orderId]: order.status }), {})
+  );
 
   // Toggle row expansion
   const toggleRowExpansion = (orderId: number) => {
@@ -82,6 +86,12 @@ const CustomerOrdersTable = ({
     console.log(`Item ${itemId} in order ${orderId} status changed to ${newStatus}`);
   };
 
+  // Handle overall order status change
+  const handleOrderStatusChange = (orderId: string, newStatus: OrderStatus) => {
+    setOrderStatuses(prev => ({ ...prev, [orderId]: newStatus }));
+    console.log(`Order ${orderId} status changed to ${newStatus}`);
+  };
+
   return (
     <>
       <div className="w-full overflow-x-auto rounded-lg border border-gray-200 bg-white shadow">
@@ -93,6 +103,7 @@ const CustomerOrdersTable = ({
               <TableHead>Customer Name</TableHead>
               <TableHead>Order Status</TableHead>
               <TableHead className="text-right">Amount</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -120,18 +131,51 @@ const CustomerOrdersTable = ({
                     </div>
                   </TableCell>
                   <TableCell>{order.customer}</TableCell>
-                  <TableCell><StatusBadge status={order.status} /></TableCell>
+                  <TableCell><StatusBadge status={orderStatuses[order.orderId] || order.status} /></TableCell>
                   <TableCell className="text-right">{formatAmount(order.amount)}</TableCell>
+                  <TableCell>
+                    <ToggleGroup type="single" className="justify-end">
+                      <ToggleGroupItem
+                        value="Started"
+                        aria-label="Start Making"
+                        onClick={() => handleOrderStatusChange(order.orderId, 'Preparing')}
+                        className="h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Start Making
+                      </ToggleGroupItem>
+                      
+                      <ToggleGroupItem
+                        value="Finished"
+                        aria-label="Finish Making"
+                        onClick={() => handleOrderStatusChange(order.orderId, 'Ready To Pick')}
+                        className="h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                      >
+                        <Check className="h-4 w-4 mr-1" />
+                        Finish Making
+                      </ToggleGroupItem>
+                      
+                      <ToggleGroupItem
+                        value="HandOver"
+                        aria-label="Hand Over"
+                        onClick={() => handleOrderStatusChange(order.orderId, 'Picked')}
+                        className="h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                      >
+                        <ArrowRight className="h-4 w-4 mr-1" />
+                        Hand Over
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </TableCell>
                 </TableRow>
                 <TableRow className={cn(isRowExpanded(order.id) ? "" : "hidden")}>
-                  <TableCell colSpan={5} className="p-0">
+                  <TableCell colSpan={6} className="p-0">
                     <Collapsible open={isRowExpanded(order.id)}>
                       <CollapsibleContent>
                         <div className="px-4 py-2 bg-milk-sugar/10">
                           <CustomerOrderItems 
                             items={order.items} 
                             orderId={order.orderId}
-                            customerName={order.customer}
+                            customerName=""
                             onStatusChange={handleItemStatusChange}
                           />
                         </div>
@@ -143,7 +187,7 @@ const CustomerOrdersTable = ({
             ))}
             {orders.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   <p className="text-gray-500">No orders found</p>
                 </TableCell>
               </TableRow>

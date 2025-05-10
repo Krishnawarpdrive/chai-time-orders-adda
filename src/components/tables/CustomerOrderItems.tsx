@@ -76,7 +76,6 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
           <thead>
             <tr className="text-xs text-gray-500 border-b">
               <th className="text-left pb-1 pl-1">Item</th>
-              <th className="text-left pb-1">Customer</th>
               <th className="text-center pb-1">Quantity</th>
               <th className="text-center pb-1">Status</th>
               <th className="text-right pb-1 pr-1">Actions</th>
@@ -95,7 +94,6 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
                   <span className="mr-2">{getItemIcon(item.name)}</span>
                   {item.name}
                 </td>
-                <td className="py-2">{customerName}</td>
                 <td className="py-2 text-center">{item.quantity}</td>
                 <td className="py-2 text-center">{getStatusBadge(item.status)}</td>
                 <td className="py-2 text-right pr-1">
@@ -105,7 +103,7 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
                         value="Started"
                         aria-label="Start Making"
                         onClick={() => updateItemStatus(item.id, 'Started')}
-                        className="border border-gray-200 h-14 font-medium bg-white text-gray-700 hover:bg-yellow-50"
+                        className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
                       >
                         <Play className="h-3 w-3 mr-1" />
                         Start Making
@@ -127,7 +125,7 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
                         value="Ready for Hand Over"
                         aria-label="Ready for Hand Over"
                         onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')}
-                        className="border border-gray-200 h-14 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90"
+                        className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
                       >
                         <ArrowRight className="h-3 w-3 mr-1" />
                         Hand Over
@@ -152,7 +150,6 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
           <tfoot>
             <tr className="font-medium text-coffee-green">
               <td className="pt-2 pl-1">Total</td>
-              <td className="pt-2"></td>
               <td className="pt-2 text-center">{itemsWithStatus.reduce((sum, item) => sum + item.quantity, 0)} items</td>
               <td className="pt-2"></td>
               <td className="pt-2"></td>

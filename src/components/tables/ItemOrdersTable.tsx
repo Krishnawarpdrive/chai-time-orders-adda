@@ -134,34 +134,35 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                 </TableCell>
                 <TableCell className="text-center">{item.totalQuantity}</TableCell>
                 <TableCell>
-                  <ToggleGroup type="single" value={item.status} className="h-14">
+                  <ToggleGroup type="single" className="h-14">
                     <ToggleGroupItem 
-                      value="Started" 
+                      value="StartMaking" 
                       aria-label="Start Making"
                       onClick={() => updateItemStatus(item.id, 'Started')}
-                      className={cn(
-                        "border border-gray-200 h-14 font-medium",
-                        item.status === 'Started' 
-                          ? "bg-yellow-600 text-white hover:bg-yellow-700" 
-                          : "bg-white text-gray-700 hover:bg-yellow-50"
-                      )}
+                      className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
                     >
                       <Play className="h-4 w-4 mr-1" />
                       Start Making
                     </ToggleGroupItem>
+                    
                     <ToggleGroupItem 
-                      value="Finished" 
+                      value="FinishMaking" 
                       aria-label="Finish Making"
                       onClick={() => updateItemStatus(item.id, 'Finished')}
-                      className={cn(
-                        "border border-gray-200 h-14 font-medium",
-                        item.status === 'Finished' 
-                          ? "bg-coffee-green text-white hover:bg-coffee-green/90" 
-                          : "bg-white text-gray-700 hover:bg-green-50"
-                      )}
+                      className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
                     >
                       <Check className="h-4 w-4 mr-1" />
                       Finish Making
+                    </ToggleGroupItem>
+                    
+                    <ToggleGroupItem 
+                      value="HandOver" 
+                      aria-label="Hand Over"
+                      onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')}
+                      className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                    >
+                      <ArrowRight className="h-4 w-4 mr-1" />
+                      Hand Over
                     </ToggleGroupItem>
                   </ToggleGroup>
                 </TableCell>
@@ -175,8 +176,7 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="text-xs text-gray-500 border-b">
-                              <th className="text-left pb-1 pl-1">Item Name</th>
-                              <th className="text-left pb-1">Customer Name</th>
+                              <th className="text-left pb-1 pl-1">Customer Name</th>
                               <th className="text-center pb-1">Quantity</th>
                               <th className="text-right pb-1 pr-1">Actions</th>
                             </tr>
@@ -187,15 +187,14 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                                 key={`${item.id}-${order.orderId}`} 
                                 className="border-b border-gray-100 last:border-0"
                               >
-                                <td className="py-2 pl-1">{item.name}</td>
-                                <td className="py-2">{order.customerName}</td>
+                                <td className="py-2 pl-1">{order.customerName}</td>
                                 <td className="py-2 text-center">{order.quantity}</td>
                                 <td className="py-2 text-right pr-1">
                                   {order.status !== 'Handed Over' ? (
                                     <Button 
                                       size="sm" 
                                       variant="outline" 
-                                      className="text-xs py-1 h-14 bg-green-50 font-medium"
+                                      className="text-xs py-1 h-14 bg-coffee-green text-white font-medium hover:bg-coffee-green/90"
                                       onClick={() => updateCustomerOrderStatus(item.id, order.orderId, 'Handed Over')}
                                     >
                                       <ArrowRight className="h-3 w-3 mr-1" />
