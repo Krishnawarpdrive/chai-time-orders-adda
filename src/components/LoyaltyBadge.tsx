@@ -2,7 +2,7 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
 import { CustomerLoyalty } from '@/lib/data';
-import { Star } from 'lucide-react';
+import { Star, Coffee } from 'lucide-react';
 
 interface LoyaltyBadgeProps {
   loyalty: CustomerLoyalty;
@@ -22,9 +22,20 @@ export function LoyaltyBadge({ loyalty }: LoyaltyBadgeProps) {
     }
   };
 
+  const getLoyaltyIcon = () => {
+    switch (loyalty) {
+      case 'Frequent':
+        return <Star className="w-3 h-3 mr-1" />;
+      case 'Periodic':
+        return <Coffee className="w-3 h-3 mr-1" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <span className={cn('loyalty-badge inline-flex items-center justify-center text-xs px-2 py-0.5 ml-2 rounded-full border', getLoyaltyStyles())}>
-      {loyalty === 'Frequent' && <Star className="w-3 h-3 mr-1" />}
+      {getLoyaltyIcon()}
       {loyalty}
     </span>
   );

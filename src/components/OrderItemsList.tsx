@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { OrderItem } from '@/lib/data';
+import { Coffee, Biscuit, Tea } from 'lucide-react';
 
 interface OrderItemsListProps {
   items: OrderItem[];
@@ -9,6 +10,19 @@ interface OrderItemsListProps {
 export function OrderItemsList({ items }: OrderItemsListProps) {
   const formatPrice = (price: number) => {
     return `₹${price.toFixed(2)}`;
+  };
+
+  // Get the appropriate icon based on item name
+  const getItemIcon = (name: string) => {
+    const lowercaseName = name.toLowerCase();
+    if (lowercaseName.includes('coffee')) {
+      return <Coffee className="w-4 h-4 text-coffee-green" />;
+    } else if (lowercaseName.includes('biscuit')) {
+      return <Biscuit className="w-4 h-4 text-bisi-orange" />;
+    } else if (lowercaseName.includes('tea') || lowercaseName.includes('chai')) {
+      return <Tea className="w-4 h-4 text-coffee-green" />;
+    }
+    return null;
   };
 
   return (
@@ -26,7 +40,10 @@ export function OrderItemsList({ items }: OrderItemsListProps) {
           <tbody>
             {items.map((item) => (
               <tr key={item.id} className="border-b border-gray-100 last:border-0">
-                <td className="py-2 pl-1">{item.name}</td>
+                <td className="py-2 pl-1 flex items-center">
+                  <span className="mr-2">{getItemIcon(item.name)}</span>
+                  {item.name}
+                </td>
                 <td className="py-2 text-center">{item.quantity}</td>
                 <td className="py-2 text-right pr-1">{formatPrice(item.price * item.quantity)}</td>
               </tr>
