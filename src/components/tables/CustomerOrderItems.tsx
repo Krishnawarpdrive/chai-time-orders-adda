@@ -97,37 +97,31 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
                 <td className="py-2 text-center">{item.quantity}</td>
                 <td className="py-2 text-center">{getStatusBadge(item.status)}</td>
                 <td className="py-2 text-right pr-1">
-                  <ToggleGroup type="single" className="justify-end">
-                    <ToggleGroupItem
-                      value="Started"
-                      aria-label="Start Making"
+                  <div className="flex justify-end gap-2">
+                    <Button
                       onClick={() => updateItemStatus(item.id, 'Started')}
-                      className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                      className="h-12 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90"
                     >
-                      <Play className="h-3 w-3 mr-1" />
+                      <Play className="h-4 w-4 mr-1" />
                       Start Making
-                    </ToggleGroupItem>
+                    </Button>
                     
-                    <ToggleGroupItem
-                      value="Finished"
-                      aria-label="Finish Making"
+                    <Button
                       onClick={() => updateItemStatus(item.id, 'Finished')}
-                      className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                      className="h-12 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
                     >
-                      <Check className="h-3 w-3 mr-1" />
+                      <Check className="h-4 w-4 mr-1" />
                       Finish Making
-                    </ToggleGroupItem>
+                    </Button>
                     
-                    <ToggleGroupItem
-                      value="Ready for Hand Over"
-                      aria-label="Ready for Hand Over"
+                    <Button
                       onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')}
-                      className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                      className="h-12 font-medium bg-milk-sugar text-coffee-green hover:bg-milk-sugar/90"
                     >
-                      <ArrowRight className="h-3 w-3 mr-1" />
+                      <ArrowRight className="h-4 w-4 mr-1" />
                       Hand Over
-                    </ToggleGroupItem>
-                  </ToggleGroup>
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}

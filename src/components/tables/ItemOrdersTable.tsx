@@ -17,7 +17,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Card } from '@/components/ui/card';
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 // Status types
 type ItemStatus = 'Not Started' | 'Started' | 'Finished' | 'Ready for Hand Over';
@@ -134,27 +133,23 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                 </TableCell>
                 <TableCell className="text-center">{item.totalQuantity}</TableCell>
                 <TableCell>
-                  <ToggleGroup type="single" className="h-14">
-                    <ToggleGroupItem 
-                      value="StartMaking" 
-                      aria-label="Start Making"
+                  <div className="flex gap-2">
+                    <Button 
                       onClick={() => updateItemStatus(item.id, 'Started')}
-                      className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                      className="h-12 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90"
                     >
                       <Play className="h-4 w-4 mr-1" />
                       Start Making
-                    </ToggleGroupItem>
+                    </Button>
                     
-                    <ToggleGroupItem 
-                      value="FinishMaking" 
-                      aria-label="Finish Making"
+                    <Button 
                       onClick={() => updateItemStatus(item.id, 'Finished')}
-                      className="border border-gray-200 h-14 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
+                      className="h-12 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
                     >
                       <Check className="h-4 w-4 mr-1" />
                       Finish Making
-                    </ToggleGroupItem>
-                  </ToggleGroup>
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
               <TableRow className={cn(isItemExpanded(item.id) ? "" : "hidden")}>
@@ -182,29 +177,25 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
                                 <td className="py-2 text-right pr-1">
                                   {item.status === 'Finished' && order.status !== 'Handed Over' ? (
                                     <Button 
-                                      size="sm" 
-                                      variant="outline" 
-                                      className="text-xs py-1 h-14 bg-coffee-green text-white font-medium hover:bg-coffee-green/90"
+                                      className="h-12 font-medium bg-milk-sugar text-coffee-green hover:bg-milk-sugar/90"
                                       onClick={() => updateCustomerOrderStatus(item.id, order.orderId, 'Handed Over')}
                                     >
-                                      <ArrowRight className="h-3 w-3 mr-1" />
+                                      <ArrowRight className="h-4 w-4 mr-1" />
                                       Hand Over
                                     </Button>
                                   ) : order.status === 'Handed Over' ? (
                                     <Button 
-                                      size="sm" 
                                       variant="ghost" 
-                                      className="text-xs py-1 h-14 text-green-800 bg-green-100 font-medium"
+                                      className="h-12 font-medium text-green-800 bg-green-100"
                                       disabled
                                     >
-                                      <Check className="h-3 w-3 mr-1" />
+                                      <Check className="h-4 w-4 mr-1" />
                                       Handed Over
                                     </Button>
                                   ) : (
                                     <Button 
-                                      size="sm" 
                                       variant="ghost" 
-                                      className="text-xs py-1 h-14 text-gray-400"
+                                      className="h-12 font-medium text-gray-400"
                                       disabled
                                     >
                                       Finish Item First
