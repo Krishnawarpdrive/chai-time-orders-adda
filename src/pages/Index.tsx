@@ -1,15 +1,15 @@
 
 import React, { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
-import OrdersTable from '@/components/OrdersTable';
-import { orderData } from '@/lib/data';
 import { Bell, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CustomerView } from '@/components/views/CustomerView';
+import { ItemView } from '@/components/views/ItemView';
 
 const Index = () => {
-  const [orders, setOrders] = useState(orderData);
   const { toast } = useToast();
 
   const handleNewOrder = () => {
@@ -50,7 +50,7 @@ const Index = () => {
           <div className="max-w-7xl mx-auto">
             <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
               <div>
-                <h2 className="font-hackney text-3xl text-coffee-green mb-1">Orders List</h2>
+                <h2 className="font-hackney text-3xl text-coffee-green mb-1">Orders Management</h2>
                 <p className="text-gray-600 text-sm">ಬಿಸಿ ಬಿಸಿ ಆರ್ಡರ್‌ಗಳು! Manage your hot orders here.</p>
               </div>
               <Button 
@@ -62,7 +62,22 @@ const Index = () => {
               </Button>
             </div>
 
-            <OrdersTable orders={orders} />
+            <Tabs defaultValue="customer" className="w-full">
+              <TabsList className="mb-4 bg-white border border-gray-200">
+                <TabsTrigger value="customer" className="data-[state=active]:bg-coffee-green data-[state=active]:text-white">
+                  Customer View
+                </TabsTrigger>
+                <TabsTrigger value="item" className="data-[state=active]:bg-coffee-green data-[state=active]:text-white">
+                  Item View
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="customer" className="mt-0">
+                <CustomerView />
+              </TabsContent>
+              <TabsContent value="item" className="mt-0">
+                <ItemView />
+              </TabsContent>
+            </Tabs>
           </div>
         </main>
       </div>
