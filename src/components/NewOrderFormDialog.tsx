@@ -9,6 +9,7 @@ import MenuItemsGrid from './order/MenuItemsGrid';
 import CartSummary from './order/CartSummary';
 import PaymentSection from './order/PaymentSection';
 import OrderFooter from './order/OrderFooter';
+import CouponSystem from './order/CouponSystem';
 import { generateOrderId } from '@/utils/orderUtils';
 
 interface CartItem extends MenuItem {
@@ -30,6 +31,7 @@ const NewOrderFormDialog: React.FC<NewOrderFormDialogProps> = ({ onClose }) => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   // Fetch menu items from Supabase
   useEffect(() => {
@@ -96,9 +98,17 @@ const NewOrderFormDialog: React.FC<NewOrderFormDialogProps> = ({ onClose }) => {
   };
 
   // Calculate total price
-  const totalPrice = cart.reduce((total, item) => {
+  const subtotalPrice = cart.reduce((total, item) => {
     return total + (item.price * item.quantity);
   }, 0);
+
+  // Calculate final price after discounts
+  const totalPrice = Math.max(0, subtotalPrice - discountAmount);
+
+  // Apply coupon discount
+  const handleApplyCoupon = (discount: number) => {
+    setDiscountAmount(discount);
+  };
 
   // Check if item is in cart
   const isInCart = (itemId: string) => {
@@ -234,8 +244,22 @@ const NewOrderFormDialog: React.FC<NewOrderFormDialogProps> = ({ onClose }) => {
             getQuantityInCart={getQuantityInCart}
           />
 
+          {/* Coupon System */}
+          {cart.length > 0 && (
+            <CouponSystem 
+              phoneNumber={phoneNumber}
+              totalPrice={subtotalPrice}
+              onApplyCoupon={handleApplyCoupon}
+            />
+          )}
+
           {/* Cart Summary */}
-          <CartSummary cart={cart} />
+          <CartSummary 
+            cart={cart} 
+            discountAmount={discountAmount}
+            subtotalPrice={subtotalPrice}
+            totalPrice={totalPrice}
+          />
         </>
       ) : (
         // QR Code Section
