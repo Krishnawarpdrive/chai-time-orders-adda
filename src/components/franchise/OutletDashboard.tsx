@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, AlertCircle, Clock, MapPin } from 'lucide-react';
+import { Check, AlertCircle, Clock, MapPin, LayoutGrid, Table as TableIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import OutletsTable from './OutletsTable';
 
 interface OutletMetrics {
   id: string;
@@ -78,6 +79,7 @@ const mockOutletData: OutletMetrics[] = [
 
 const OutletDashboard = () => {
   const [showAuditAlert, setShowAuditAlert] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   
   const getInventoryStatusColor = (status: string) => {
     switch(status) {
@@ -92,9 +94,29 @@ const OutletDashboard = () => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold text-coffee-green">Franchise Outlets</h2>
-        <Button size="sm" variant="outline" className="border-coffee-green text-coffee-green hover:bg-coffee-green/10">
-          Schedule Audit
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="bg-muted rounded-md p-1 flex">
+            <Button 
+              size="sm" 
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              className={viewMode === 'grid' ? 'bg-coffee-green text-white' : ''}
+              onClick={() => setViewMode('grid')}
+            >
+              <LayoutGrid size={16} />
+            </Button>
+            <Button 
+              size="sm" 
+              variant={viewMode === 'table' ? 'default' : 'ghost'}
+              className={viewMode === 'table' ? 'bg-coffee-green text-white' : ''}
+              onClick={() => setViewMode('table')}
+            >
+              <TableIcon size={16} />
+            </Button>
+          </div>
+          <Button size="sm" variant="outline" className="border-coffee-green text-coffee-green hover:bg-coffee-green/10">
+            Schedule Audit
+          </Button>
+        </div>
       </div>
       
       {showAuditAlert && (
@@ -126,56 +148,60 @@ const OutletDashboard = () => {
         </div>
         
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {mockOutletData.map(outlet => (
-              <Card key={outlet.id} className="shadow-sm">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between">
-                    <div>
-                      <CardTitle className="text-coffee-green">{outlet.name}</CardTitle>
-                      <CardDescription className="flex items-center gap-1 mt-1">
-                        <MapPin size={14} /> {outlet.location}
-                      </CardDescription>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {mockOutletData.map(outlet => (
+                <Card key={outlet.id} className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between">
+                      <div>
+                        <CardTitle className="text-coffee-green">{outlet.name}</CardTitle>
+                        <CardDescription className="flex items-center gap-1 mt-1">
+                          <MapPin size={14} /> {outlet.location}
+                        </CardDescription>
+                      </div>
+                      {outlet.hasScheduledAudit && (
+                        <Badge className="bg-bisi-orange">Audit Scheduled</Badge>
+                      )}
                     </div>
-                    {outlet.hasScheduledAudit && (
-                      <Badge className="bg-bisi-orange">Audit Scheduled</Badge>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-2">
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex flex-col">
-                      <span className="text-gray-500">Total Orders</span>
-                      <span className="font-semibold text-lg">{outlet.orderVolume}</span>
+                  </CardHeader>
+                  <CardContent className="pb-2">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex flex-col">
+                        <span className="text-gray-500">Total Orders</span>
+                        <span className="font-semibold text-lg">{outlet.orderVolume}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-gray-500">Pending</span>
+                        <span className="font-semibold text-lg flex items-center">
+                          {outlet.pendingOrders}
+                          <Clock size={16} className="text-yellow-500 ml-1" />
+                        </span>
+                      </div>
+                      
+                      <div className="flex flex-col">
+                        <span className="text-gray-500">Rating</span>
+                        <span className="font-semibold">⭐ {outlet.customerRating}/5</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-gray-500">Inventory</span>
+                        <Badge className={getInventoryStatusColor(outlet.inventoryStatus)}>
+                          {outlet.inventoryStatus}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-gray-500">Pending</span>
-                      <span className="font-semibold text-lg flex items-center">
-                        {outlet.pendingOrders}
-                        <Clock size={16} className="text-yellow-500 ml-1" />
-                      </span>
+                  </CardContent>
+                  <CardFooter className="pt-0">
+                    <div className="w-full text-xs text-gray-500">
+                      Last audited: {outlet.lastAuditDate} (Score: {outlet.auditScore})
                     </div>
-                    
-                    <div className="flex flex-col">
-                      <span className="text-gray-500">Rating</span>
-                      <span className="font-semibold">⭐ {outlet.customerRating}/5</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-gray-500">Inventory</span>
-                      <Badge className={getInventoryStatusColor(outlet.inventoryStatus)}>
-                        {outlet.inventoryStatus}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-0">
-                  <div className="w-full text-xs text-gray-500">
-                    Last audited: {outlet.lastAuditDate} (Score: {outlet.auditScore})
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <OutletsTable outlets={mockOutletData} />
+          )}
         </TabsContent>
         
         <TabsContent value="orders">
