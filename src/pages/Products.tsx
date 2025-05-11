@@ -1,19 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Package, ShoppingBag, AlertCircle } from 'lucide-react';
 import { Spinner } from "@/components/ui/spinner";
-
-interface InventoryItem {
-  id: string;
-  name: string;
-  quantity: number;
-  reorder_level: number;
-  price_per_unit: number;
-  unit: string;
-}
+import { type InventoryItem } from "@/hooks/useInventory";
 
 const Products = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
