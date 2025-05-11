@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Order } from '@/types/supabase';
 import { cn } from '@/lib/utils';
 import StatusBadge from '@/components/StatusBadge';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CustomerOrderItems from '@/components/tables/CustomerOrderItems';
 import OrdersPagination from '@/components/table/OrdersPagination';
@@ -102,6 +102,17 @@ const CustomerOrdersTable = ({
     return `₹${amount.toFixed(2)}`;
   };
 
+  // Generate random rating for demo purposes (in real app, this would come from the database)
+  const getRating = (orderId: string) => {
+    // Using a hash of the orderId to generate a consistent rating between 3 and 5
+    const hash = orderId.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
+    return (Math.abs(hash) % 3) + 3; // Rating between 3 and 5
+  };
+
   // Handle status change for an item
   const handleItemStatusChange = async (
     orderId: string, 
@@ -156,6 +167,24 @@ const CustomerOrdersTable = ({
       : firstTwoItems;
   };
 
+  // Render star rating
+  const renderStarRating = (rating: number) => {
+    return (
+      <div className="flex items-center">
+        {[...Array(5)].map((_, i) => (
+          <Star
+            key={i}
+            className={cn(
+              "h-4 w-4",
+              i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
+            )}
+          />
+        ))}
+        <span className="ml-1 text-sm text-gray-600">{rating.toFixed(1)}</span>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="w-full flex justify-center items-center h-64">
@@ -175,6 +204,7 @@ const CustomerOrdersTable = ({
               <TableHead>Customer Name</TableHead>
               <TableHead>Last Visit</TableHead>
               <TableHead>Last Order</TableHead>
+              <TableHead>Rating</TableHead>
               <TableHead>Order Status</TableHead>
               <TableHead className="text-right">Amount</TableHead>
             </TableRow>
@@ -189,10 +219,10 @@ const CustomerOrdersTable = ({
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-6 w-6 rounded-full" 
+                          className="h-8 w-8 rounded-full" 
                           onClick={() => toggleRowExpansion(order.id)}
                         >
-                          {isRowExpanded(order.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          {isRowExpanded(order.id) ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                         </Button>
                       </CollapsibleTrigger>
                     </Collapsible>
@@ -230,11 +260,12 @@ const CustomerOrdersTable = ({
                       <span className="text-gray-400 text-sm">Loading...</span>
                     )}
                   </TableCell>
+                  <TableCell>{renderStarRating(getRating(order.id))}</TableCell>
                   <TableCell><StatusBadge status={order.status} /></TableCell>
                   <TableCell className="text-right">{formatAmount(order.amount)}</TableCell>
                 </TableRow>
                 <TableRow className={cn(isRowExpanded(order.id) ? "" : "hidden")}>
-                  <TableCell colSpan={7} className="p-0">
+                  <TableCell colSpan={8} className="p-0">
                     <Collapsible open={isRowExpanded(order.id)}>
                       <CollapsibleContent>
                         <div className="px-4 py-2 bg-milk-sugar/10">
@@ -260,7 +291,7 @@ const CustomerOrdersTable = ({
             ))}
             {orders.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={8} className="text-center py-8">
                   <p className="text-gray-500">No orders found</p>
                 </TableCell>
               </TableRow>

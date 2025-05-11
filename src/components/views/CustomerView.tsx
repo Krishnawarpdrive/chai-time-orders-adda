@@ -14,7 +14,7 @@ export const CustomerView = () => {
   const [filterValue, setFilterValue] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
-  const ordersPerPage = 18; // Increased to 18 as requested
+  const ordersPerPage = 18; // Set to 18 as requested
 
   // Fetch orders from Supabase
   useEffect(() => {
@@ -98,7 +98,7 @@ export const CustomerView = () => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full min-h-[calc(100vh-160px)] flex flex-col">
       <OrdersSearchFilter 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
