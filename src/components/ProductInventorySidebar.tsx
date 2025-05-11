@@ -37,19 +37,12 @@ const ProductInventorySidebar = () => {
     const fetchInventory = async () => {
       setLoading(true);
       try {
-        // Using fetch API to get around type issues with Supabase client
-        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/inventory?select=*&order=name`, {
-          headers: {
-            'apikey': supabase.supabaseKey,
-            'Content-Type': 'application/json'
-          }
-        });
+        const { data, error } = await supabase
+          .from('inventory')
+          .select('*')
+          .order('name');
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        if (error) throw error;
         setInventory(data as InventoryItem[]);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch inventory data');
@@ -75,23 +68,16 @@ const ProductInventorySidebar = () => {
       // Calculate new quantity
       const newQuantity = selectedItem.quantity + requestQuantity;
 
-      // Update inventory item using fetch API
-      const response = await fetch(`${supabase.supabaseUrl}/rest/v1/inventory?id=eq.${selectedItem.id}`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': supabase.supabaseKey,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify({
+      // Update inventory item using Supabase client
+      const { error } = await supabase
+        .from('inventory')
+        .update({
           quantity: newQuantity,
           updated_at: new Date().toISOString()
         })
-      });
+        .eq('id', selectedItem.id);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (error) throw error;
 
       // Update local state
       setInventory(inventory.map(item => 
