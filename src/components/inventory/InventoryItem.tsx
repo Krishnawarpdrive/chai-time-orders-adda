@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { type InventoryItem } from "@/hooks/useInventory";
-import { Plus, Check, ChevronUp, ChevronDown, AlertCircle, ShoppingBag } from 'lucide-react';
+import { Plus, Check, AlertCircle } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -16,7 +15,7 @@ interface InventoryItemProps {
 const InventoryItem = ({ 
   item, 
   onUpdateClick, 
-  isRequestMode = false,
+  isRequestMode = true,
   onAddToRequest
 }: InventoryItemProps) => {
   const [requestQuantity, setRequestQuantity] = useState(1);
