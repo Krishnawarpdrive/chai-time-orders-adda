@@ -37,22 +37,20 @@ const ProductInventorySidebar = () => {
     const fetchInventory = async () => {
       setLoading(true);
       try {
-        // Using the generic query method to avoid type errors
-        const { data, error } = await supabase
-          .from('inventory')
-          .select('*')
-          .order('name') as unknown as { 
-            data: InventoryItem[] | null; 
-            error: Error | null 
-          };
-
-        if (error) {
-          throw error;
+        // Using fetch API to get around type issues with Supabase client
+        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/inventory?select=*&order=name`, {
+          headers: {
+            'apikey': supabase.supabaseKey,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        if (data) {
-          setInventory(data);
-        }
+        
+        const data = await response.json();
+        setInventory(data as InventoryItem[]);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch inventory data');
         console.error('Error fetching inventory:', err);
@@ -77,18 +75,23 @@ const ProductInventorySidebar = () => {
       // Calculate new quantity
       const newQuantity = selectedItem.quantity + requestQuantity;
 
-      // Update inventory item
-      const { error } = await supabase
-        .from('inventory')
-        .update({ 
+      // Update inventory item using fetch API
+      const response = await fetch(`${supabase.supabaseUrl}/rest/v1/inventory?id=eq.${selectedItem.id}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': supabase.supabaseKey,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
           quantity: newQuantity,
           updated_at: new Date().toISOString()
         })
-        .eq('id', selectedItem.id) as unknown as {
-          error: Error | null
-        };
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       // Update local state
       setInventory(inventory.map(item => 
