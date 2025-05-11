@@ -64,29 +64,21 @@ const CustomerOrderExpanded = ({
               </div>
               
               <div className="space-y-4">
-                <Card>
-                  <CardContent className="pt-6">
-                    <h4 className="text-lg font-medium text-coffee-green mb-3">Customer Summary</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Rating:</span>
-                        <StarRating rating={getRating(orderId)} />
-                      </div>
-                      
-                      {lastVisitDate && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Last Visit:</span>
-                          <span className="font-medium">{formatDate(lastVisitDate)}</span>
-                        </div>
-                      )}
-                      
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Previous Orders:</span>
-                        <span className="font-medium">{previousOrders.length}</span>
-                      </div>
+                {/* Customer Summary as text instead of a card */}
+                <div className="bg-white p-4 rounded-lg border border-gray-100">
+                  <h4 className="text-lg font-medium text-coffee-green mb-3">Customer Summary</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Rating:</span>
+                      <StarRating rating={getRating(orderId)} />
                     </div>
-                  </CardContent>
-                </Card>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Previous Orders:</span>
+                      <span className="font-medium">{previousOrders.length}</span>
+                    </div>
+                  </div>
+                </div>
                 
                 {previousOrders.length > 0 && (
                   <Card>
