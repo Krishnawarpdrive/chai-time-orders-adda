@@ -1,15 +1,22 @@
 
 import React, { useState } from 'react';
-import { Package, AlertCircle } from 'lucide-react';
+import { Package, AlertCircle, Check } from 'lucide-react';
 import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
 import { useInventory, type InventoryItem } from "@/hooks/useInventory";
 import InventoryItemCard from "@/components/inventory/InventoryItem";
 import UpdateInventoryDialog from "@/components/inventory/UpdateInventoryDialog";
+import InventoryRequestDialog from "@/components/inventory/InventoryRequestDialog";
+import { useToast } from "@/hooks/use-toast";
 
 const ProductInventorySidebar = () => {
   const { inventory, loading, error, updateInventoryItem } = useInventory();
+  const { toast } = useToast();
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [isRequestMode, setIsRequestMode] = useState<boolean>(false);
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState<boolean>(false);
+  const [requestItems, setRequestItems] = useState<Array<InventoryItem & { requestQuantity: number }>>([]);
 
   const handleUpdateInventory = (item: InventoryItem) => {
     setSelectedItem(item);
@@ -20,12 +27,84 @@ const ProductInventorySidebar = () => {
     return await updateInventoryItem(itemId, newQuantity);
   };
 
+  const toggleRequestMode = () => {
+    if (isRequestMode && requestItems.length > 0) {
+      // If switching off request mode with items in cart, confirm first
+      setIsRequestDialogOpen(true);
+    } else {
+      setIsRequestMode(!isRequestMode);
+      if (!isRequestMode) {
+        toast({
+          title: "Request Mode Enabled",
+          description: "Add items to your inventory request.",
+        });
+      }
+    }
+  };
+
+  const handleAddToRequest = (item: InventoryItem, quantity: number) => {
+    // Check if item already exists in request
+    const existingItemIndex = requestItems.findIndex(reqItem => reqItem.id === item.id);
+    
+    if (existingItemIndex >= 0) {
+      // Update existing item quantity
+      const updatedItems = [...requestItems];
+      updatedItems[existingItemIndex] = { 
+        ...updatedItems[existingItemIndex], 
+        requestQuantity: updatedItems[existingItemIndex].requestQuantity + quantity 
+      };
+      setRequestItems(updatedItems);
+    } else {
+      // Add new item to request
+      setRequestItems([...requestItems, { ...item, requestQuantity: quantity }]);
+    }
+    
+    toast({
+      title: "Added to Request",
+      description: `${quantity} ${item.unit} of ${item.name} added to your request.`,
+    });
+  };
+
+  const clearRequest = () => {
+    setRequestItems([]);
+    setIsRequestMode(false);
+  };
+
   return (
     <div className="fixed right-0 top-0 h-screen w-72 border-l border-gray-200 bg-white shadow-lg overflow-y-auto p-4">
       <h2 className="text-xl font-semibold mb-4 text-coffee-green flex items-center gap-2">
         <Package size={20} />
         Product Inventory
       </h2>
+
+      <div className="mb-4 flex justify-between items-center">
+        <Button
+          onClick={toggleRequestMode}
+          variant={isRequestMode ? "default" : "outline"}
+          size="sm"
+          className={isRequestMode ? "bg-coffee-green hover:bg-coffee-green/90" : ""}
+        >
+          {isRequestMode ? (
+            <>
+              <Check size={16} />
+              Request Mode
+            </>
+          ) : (
+            "Make Inventory Request"
+          )}
+        </Button>
+        
+        {isRequestMode && requestItems.length > 0 && (
+          <Button
+            onClick={() => setIsRequestDialogOpen(true)}
+            variant="default"
+            size="sm"
+            className="bg-bisi-orange hover:bg-bisi-orange/90"
+          >
+            Review ({requestItems.length})
+          </Button>
+        )}
+      </div>
 
       {loading && (
         <div className="flex flex-col items-center justify-center py-8">
@@ -49,6 +128,8 @@ const ProductInventorySidebar = () => {
             key={item.id}
             item={item}
             onUpdateClick={handleUpdateInventory}
+            isRequestMode={isRequestMode}
+            onAddToRequest={handleAddToRequest}
           />
         ))}
 
@@ -64,6 +145,13 @@ const ProductInventorySidebar = () => {
         onOpenChange={setIsDialogOpen}
         selectedItem={selectedItem}
         onConfirm={handleConfirmUpdate}
+      />
+      
+      <InventoryRequestDialog
+        isOpen={isRequestDialogOpen}
+        onOpenChange={setIsRequestDialogOpen}
+        requestItems={requestItems}
+        onClearRequest={clearRequest}
       />
     </div>
   );
