@@ -19,7 +19,8 @@ import {
   Shield,
   Home,
   CreditCard,
-  Menu as MenuIcon
+  Menu as MenuIcon,
+  LogOut
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
@@ -62,6 +63,14 @@ export function Sidebar({ className }: SidebarProps) {
       setCollapsed(true);
     }
   }, [isMobile]);
+
+  // Check for stored persona preference
+  useEffect(() => {
+    const storedPersona = localStorage.getItem('selected_persona');
+    if (storedPersona) {
+      setSelectedPersona(storedPersona);
+    }
+  }, []);
 
   const navItems: NavItem[] = [
     { 
@@ -121,7 +130,7 @@ export function Sidebar({ className }: SidebarProps) {
     },
   ];
 
-  // Customer-specific menu items
+  // Customer-specific menu items to match the screenshots
   const customerNavItems: NavItem[] = [
     { 
       title: 'Home', 
@@ -161,13 +170,86 @@ export function Sidebar({ className }: SidebarProps) {
   const handlePersonaChange = (value: string) => {
     setSelectedPersona(value);
     setMobileMenuOpen(false); // Close mobile menu after selection
-    // Here you would typically switch contexts, update permissions, or redirect
+    
+    // Save persona selection to localStorage so it persists and can be accessed by other components
+    localStorage.setItem('selected_persona', value);
+    
+    // Dispatch storage event to notify other components
+    window.dispatchEvent(new Event('storage'));
+    
     console.log(`Switched to ${value} persona`);
   };
 
   // Get the current active navigation items based on selected persona
   const activeNavItems = selectedPersona === 'customer' ? customerNavItems : 
     navItems.filter(item => !item.personas || item.personas.includes(selectedPersona));
+
+  // Special mobile menu for customer persona that matches the screenshots
+  if (isMobile && selectedPersona === 'customer' && mobileMenuOpen) {
+    return (
+      <div className="fixed inset-0 bg-[#1e483c] text-white z-50 flex flex-col">
+        <div className="p-4 flex justify-between items-center border-b border-white/20">
+          <div className="text-2xl font-bold">Menu</div>
+          <button onClick={() => setMobileMenuOpen(false)} className="text-white p-2">
+            <span className="sr-only">Close</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-auto">
+          <ul className="py-4">
+            {customerNavItems.map((item) => (
+              <li key={item.title} className="px-4 py-3">
+                <NavLink
+                  to={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) => 
+                    `flex items-center text-xl ${isActive ? 'text-[#e9c766]' : 'text-white'}`
+                  }
+                >
+                  <item.icon className="mr-4 h-6 w-6" />
+                  <span>{item.title}</span>
+                  {item.badge && (
+                    <span className="ml-auto bg-[#e46546] text-white text-xs px-2 py-1 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                </NavLink>
+              </li>
+            ))}
+
+            <li className="px-4 py-3">
+              <button className="flex items-center text-xl text-white w-full">
+                <LogOut className="mr-4 h-6 w-6" />
+                <span>Logout</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        {/* Persona Selector for Mobile */}
+        <div className="border-t border-white/20 p-4">
+          <p className="text-sm text-white/70 mb-2">Switch Persona:</p>
+          {personas.map((persona) => (
+            <button
+              key={persona.value}
+              onClick={() => handlePersonaChange(persona.value)}
+              className={`flex items-center w-full p-2 rounded-md ${
+                selectedPersona === persona.value 
+                  ? 'bg-[#e9c766] text-[#1e483c]' 
+                  : 'text-white/80 hover:bg-[#1e483c]/60'
+              }`}
+            >
+              <persona.icon className="mr-3 h-5 w-5" />
+              <span>{persona.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <aside 
@@ -216,9 +298,9 @@ export function Sidebar({ className }: SidebarProps) {
               <SelectTrigger className="w-full bg-coffee-green/50 border-coffee-green/30 text-white">
                 <SelectValue placeholder="Select Persona" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-coffee-green border-coffee-green/30">
                 {personas.map((persona) => (
-                  <SelectItem key={persona.value} value={persona.value}>
+                  <SelectItem key={persona.value} value={persona.value} className="text-white focus:bg-coffee-green/70 focus:text-white">
                     <div className="flex items-center gap-2">
                       <persona.icon className="h-4 w-4" />
                       <span>{persona.label}</span>
@@ -249,27 +331,6 @@ export function Sidebar({ className }: SidebarProps) {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
-
-        {/* Mobile Expanded Persona Selector */}
-        {isMobile && mobileMenuOpen && (
-          <div className="mt-4 border-b border-coffee-green/30 pb-4">
-            <p className="text-sm text-white/70 mb-2">Switch Persona:</p>
-            {personas.map((persona) => (
-              <button
-                key={persona.value}
-                onClick={() => handlePersonaChange(persona.value)}
-                className={`flex items-center w-full p-2 rounded-md ${
-                  selectedPersona === persona.value 
-                    ? 'bg-bisi-orange text-white' 
-                    : 'text-white/80 hover:bg-coffee-green/60'
-                }`}
-              >
-                <persona.icon className="mr-3 h-5 w-5" />
-                <span>{persona.label}</span>
-              </button>
-            ))}
-          </div>
         )}
       </div>
       

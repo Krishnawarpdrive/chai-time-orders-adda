@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
-import { Bell, Plus } from 'lucide-react';
+import { Bell, Plus, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,7 @@ const Index = () => {
   const [isNewOrderDialogOpen, setIsNewOrderDialogOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const isMobile = useIsMobile();
+  const [selectedPersona, setSelectedPersona] = useState('customer');
   
   // Handle scroll events to detect when to collapse the header
   useEffect(() => {
@@ -32,6 +33,25 @@ const Index = () => {
     };
   }, []);
 
+  // Get selected persona from sidebar
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const storedPersona = localStorage.getItem('selected_persona');
+      if (storedPersona) {
+        setSelectedPersona(storedPersona);
+      }
+    };
+
+    // Initial check
+    handleStorageChange();
+
+    // Listen for changes
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   const handleNewOrder = () => {
     toast({
       title: "New Order",
@@ -40,6 +60,169 @@ const Index = () => {
     setIsNewOrderDialogOpen(true);
   };
 
+  // Render customer mobile view based on screenshots
+  if (isMobile && selectedPersona === 'customer') {
+    return (
+      <div className="min-h-screen bg-[#f8f3e3]">
+        {/* Mobile Header for Customer */}
+        <header className="bg-[#1e483c] text-white p-4 flex justify-between items-center">
+          <button className="text-white">
+            <span className="sr-only">Menu</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" x2="20" y1="12" y2="12" />
+              <line x1="4" x2="20" y1="6" y2="6" />
+              <line x1="4" x2="20" y1="18" y2="18" />
+            </svg>
+          </button>
+          <h1 className="text-2xl font-bold text-center">COASTERS</h1>
+          <button className="relative">
+            <Bell size={24} />
+            <span className="absolute top-0 right-0 h-2 w-2 bg-[#e46546] rounded-full"></span>
+          </button>
+        </header>
+
+        {/* Location Bar */}
+        <div className="bg-[#e9c766] text-[#1e483c] p-4 flex items-center">
+          <MapPin className="mr-2" />
+          <span>37th A Cross Rd, Jaya Nagar</span>
+        </div>
+
+        {/* Main Content Area - Content varies based on current route */}
+        <main className="p-4">
+          {location.pathname === '/refer' ? (
+            <div className="py-4">
+              <h1 className="text-3xl font-bold text-[#1e483c] mb-8">YOUR REFERRALS</h1>
+              
+              <div className="bg-white rounded-lg border-2 border-[#e9c766] overflow-hidden mb-6">
+                <div className="bg-[#f8f3e3] p-6">
+                  <h2 className="text-2xl text-[#1e483c] font-bold mb-2">Your Referral Code</h2>
+                  <div className="bg-white border border-gray-300 rounded p-3 text-center mb-4 text-xl">
+                    COFFEE123
+                  </div>
+                  <Button className="w-full bg-[#e46546] hover:bg-[#d35535] text-white">
+                    Share via WhatsApp
+                  </Button>
+                </div>
+                <div className="p-6">
+                  <h3 className="font-semibold text-lg text-[#1e483c] mb-4">How it works</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-start">
+                      <div className="bg-[#1e483c] text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">1</div>
+                      <p>Share your code with friends</p>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="bg-[#1e483c] text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">2</div>
+                      <p>Friend gets ₹50 off their first order</p>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="bg-[#1e483c] text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">3</div>
+                      <p>You earn ₹50 after their purchase</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg border-2 border-[#e9c766] overflow-hidden">
+                <h3 className="bg-[#1e483c] text-white p-4 font-bold">Referral Statistics</h3>
+                <div className="p-6">
+                  <div className="flex justify-between mb-4">
+                    <span>Total Referrals</span>
+                    <span className="font-bold">3</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Rewards Earned</span>
+                    <span className="font-bold">₹150</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              {/* Default home screen with coffee products */}
+              <h1 className="text-3xl font-bold text-[#1e483c] leading-tight mb-8">
+                HELLO COFFEE LOVER,<br />
+                LET'S ORDER HAPPINESS!
+              </h1>
+              
+              {/* Product Cards */}
+              <div className="space-y-6">
+                {/* Cappuccino */}
+                <div className="bg-white rounded-lg border-2 border-[#e9c766] p-4">
+                  <div className="flex justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold text-[#1e483c]">Cappuccino</h2>
+                      <p className="text-[#e46546] font-bold text-xl">₹100</p>
+                      <p className="text-gray-600 mt-2">
+                        The perfect balance of espresso, steamed milk and foam.
+                      </p>
+                      <div className="flex items-center mt-4">
+                        <button className="bg-[#1e483c] text-white h-10 w-10 flex items-center justify-center">-</button>
+                        <div className="h-10 w-10 border border-gray-300 flex items-center justify-center">1</div>
+                        <button className="bg-[#1e483c] text-white h-10 w-10 flex items-center justify-center">+</button>
+                        <button className="ml-4 bg-[#e46546] text-white px-8 py-2 rounded">ADD</button>
+                      </div>
+                    </div>
+                    <div className="w-24 h-24 rounded border border-[#e9c766]">
+                      {/* Product image would go here */}
+                      <div className="w-full h-full bg-gray-200"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Latte */}
+                <div className="bg-white rounded-lg border-2 border-[#e9c766] p-4">
+                  <div className="flex justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold text-[#1e483c]">Latte</h2>
+                      <p className="text-[#e46546] font-bold text-xl">₹120</p>
+                      <p className="text-gray-600 mt-2">
+                        Smooth espresso with steamed milk and a light layer of foam.
+                      </p>
+                      <div className="flex items-center mt-4">
+                        <button className="bg-[#1e483c] text-white h-10 w-10 flex items-center justify-center">-</button>
+                        <div className="h-10 w-10 border border-gray-300 flex items-center justify-center">1</div>
+                        <button className="bg-[#1e483c] text-white h-10 w-10 flex items-center justify-center">+</button>
+                        <button className="ml-4 bg-[#e46546] text-white px-8 py-2 rounded">ADD</button>
+                      </div>
+                    </div>
+                    <div className="w-24 h-24 rounded border border-[#e9c766]">
+                      {/* Product image would go here */}
+                      <div className="w-full h-full bg-gray-200"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Espresso */}
+                <div className="bg-white rounded-lg border-2 border-[#e9c766] p-4">
+                  <div className="flex justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold text-[#1e483c]">Espresso</h2>
+                      <p className="text-[#e46546] font-bold text-xl">₹80</p>
+                      <p className="text-gray-600 mt-2">
+                        Strong and concentrated shot of coffee.
+                      </p>
+                      <div className="flex items-center mt-4">
+                        <button className="bg-[#1e483c] text-white h-10 w-10 flex items-center justify-center">-</button>
+                        <div className="h-10 w-10 border border-gray-300 flex items-center justify-center">1</div>
+                        <button className="bg-[#1e483c] text-white h-10 w-10 flex items-center justify-center">+</button>
+                        <button className="ml-4 bg-[#e46546] text-white px-8 py-2 rounded">ADD</button>
+                      </div>
+                    </div>
+                    <div className="w-24 h-24 rounded border border-[#e9c766]">
+                      {/* Product image would go here */}
+                      <div className="w-full h-full bg-gray-200"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  // Original staff dashboard view
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
