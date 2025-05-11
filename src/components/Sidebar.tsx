@@ -12,9 +12,26 @@ import {
   BarChart,
   Users as StaffIcon,
   MapPin,
-  DatabaseIcon
+  DatabaseIcon,
+  User,
+  Building,
+  Store,
+  Shield
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SidebarProps {
   className?: string;
@@ -31,6 +48,7 @@ export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const currentPath = location.pathname;
+  const [selectedPersona, setSelectedPersona] = useState<string>("Customer");
 
   const navItems: NavItem[] = [
     { 
@@ -81,6 +99,19 @@ export function Sidebar({ className }: SidebarProps) {
     },
   ];
 
+  const personas = [
+    { value: "customer", label: "Customer", icon: User },
+    { value: "staff", label: "Staff", icon: StaffIcon },
+    { value: "franchise", label: "Franchise Owner", icon: Store },
+    { value: "brand", label: "Brand Owner", icon: Shield },
+  ];
+
+  const handlePersonaChange = (value: string) => {
+    setSelectedPersona(value);
+    // Here you would typically switch contexts, update permissions, or redirect
+    console.log(`Switched to ${value} persona`);
+  };
+
   return (
     <aside 
       className={cn(
@@ -89,18 +120,63 @@ export function Sidebar({ className }: SidebarProps) {
         className
       )}
     >
-      {/* Logo */}
-      <div className="flex items-center p-4 h-16">
+      {/* Logo and Persona Selector */}
+      <div className="flex flex-col p-4 h-auto">
+        <div className="flex items-center h-16">
+          {!collapsed && (
+            <div className="font-hackney text-xl tracking-wide">
+              <span className="text-white">Parse</span>
+              <span className="text-bisi-orange">Nue</span>
+            </div>
+          )}
+          {collapsed && (
+            <div className="w-8 h-8 bg-gradient-to-r from-bisi-orange to-bisi-orange/80 rounded flex items-center justify-center text-white font-hackney">
+              P
+            </div>
+          )}
+        </div>
+        
         {!collapsed && (
-          <div className="font-hackney text-xl tracking-wide">
-            <span className="text-white">Parse</span>
-            <span className="text-bisi-orange">Nue</span>
+          <div className="mt-4">
+            <Select 
+              defaultValue={personas[0].value} 
+              onValueChange={handlePersonaChange}
+            >
+              <SelectTrigger className="w-full bg-coffee-green/50 border-coffee-green/30 text-white">
+                <SelectValue placeholder="Select Persona" />
+              </SelectTrigger>
+              <SelectContent>
+                {personas.map((persona) => (
+                  <SelectItem key={persona.value} value={persona.value}>
+                    <div className="flex items-center gap-2">
+                      <persona.icon className="h-4 w-4" />
+                      <span>{persona.label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
+        
         {collapsed && (
-          <div className="w-8 h-8 bg-gradient-to-r from-bisi-orange to-bisi-orange/80 rounded flex items-center justify-center text-white font-hackney">
-            P
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="mt-4 w-8 h-8 flex items-center justify-center bg-coffee-green/50 rounded hover:bg-coffee-green/70 transition-colors">
+              <User size={16} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="right">
+              {personas.map((persona) => (
+                <DropdownMenuItem 
+                  key={persona.value}
+                  onClick={() => handlePersonaChange(persona.value)}
+                  className="cursor-pointer"
+                >
+                  <persona.icon className="mr-2 h-4 w-4" />
+                  <span>{persona.label}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
       
@@ -151,7 +227,7 @@ export function Sidebar({ className }: SidebarProps) {
         {!collapsed && (
           <div className="text-white/70 text-xs text-center">
             <p>ಸ್ವಾಗತ!</p>
-            <p>Welcome, Admin</p>
+            <p>Welcome, {selectedPersona}</p>
           </div>
         )}
       </div>
