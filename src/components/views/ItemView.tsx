@@ -1,58 +1,63 @@
 
-import React, { useState, useMemo } from 'react';
-import { orderData } from '@/lib/data';
+import React, { useState, useEffect } from 'react';
 import ItemOrdersTable from '@/components/tables/ItemOrdersTable';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { orderService } from '@/services/orderService';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from "@/integrations/supabase/client";
 
 export const ItemView = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [itemsData, setItemsData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Transform order data to item-based view
-  const itemBasedData = useMemo(() => {
-    // Create a map to group items
-    const itemMap = new Map();
-    
-    orderData.forEach(order => {
-      order.items.forEach(item => {
-        const existingItem = itemMap.get(item.name);
-        
-        if (existingItem) {
-          // Update existing item
-          existingItem.totalQuantity += item.quantity;
-          existingItem.orders.push({
-            orderId: order.orderId,
-            customerId: order.id,
-            customerName: order.customer,
-            quantity: item.quantity,
-            status: 'Not Started', // Default status
-            itemId: item.id
-          });
-        } else {
-          // Create new item
-          itemMap.set(item.name, {
-            id: item.id,
-            name: item.name,
-            totalQuantity: item.quantity,
-            status: 'Not Started', // Default status
-            orders: [{
-              orderId: order.orderId,
-              customerId: order.id,
-              customerName: order.customer,
-              quantity: item.quantity,
-              status: 'Not Started', // Default status
-              itemId: item.id
-            }]
+  // Fetch items from Supabase
+  useEffect(() => {
+    const fetchItemsData = async () => {
+      setLoading(true);
+      try {
+        const fetchedItems = await orderService.getItemBasedView();
+        setItemsData(fetchedItems);
+      } catch (error) {
+        console.error("Error fetching items data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load items. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItemsData();
+  }, [toast]);
+
+  // Set up realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'order_items' },
+        (payload) => {
+          // Refresh items when changes occur
+          orderService.getItemBasedView().then(updatedItems => {
+            setItemsData(updatedItems);
           });
         }
-      });
-    });
-    
-    return Array.from(itemMap.values());
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Filter items based on search
-  const filteredItems = itemBasedData.filter(item => 
+  const filteredItems = itemsData.filter(item => 
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -71,7 +76,7 @@ export const ItemView = () => {
         />
       </div>
 
-      <ItemOrdersTable items={filteredItems} />
+      <ItemOrdersTable items={filteredItems} loading={loading} />
     </div>
   );
 };

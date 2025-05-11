@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronUp, Play, Check, ArrowRight, Coffee, Cookie, Leaf } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { orderService } from '@/services/orderService';
+import { useToast } from '@/hooks/use-toast';
+import { Spinner } from '@/components/ui/spinner';
 import { 
   Table, 
   TableHeader, 
@@ -25,15 +28,15 @@ type CustomerOrderStatus = 'Not Started' | 'Started' | 'Finished' | 'Handed Over
 // Item interface
 interface ItemOrder {
   orderId: string;
-  customerId: number;
+  customerId: string;
   customerName: string;
   quantity: number;
   status: CustomerOrderStatus;
-  itemId: number;
+  itemId: string;
 }
 
 interface ItemData {
-  id: number;
+  id: string;
   name: string;
   totalQuantity: number;
   status: ItemStatus;
@@ -42,14 +45,21 @@ interface ItemData {
 
 interface ItemOrdersTableProps {
   items: ItemData[];
+  loading: boolean;
 }
 
-const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
-  const [expandedItems, setExpandedItems] = useState<number[]>([]);
+const ItemOrdersTable = ({ items, loading }: ItemOrdersTableProps) => {
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [itemsData, setItemsData] = useState<ItemData[]>(items);
+  const { toast } = useToast();
+
+  // Update items when props change
+  React.useEffect(() => {
+    setItemsData(items);
+  }, [items]);
 
   // Toggle item expansion
-  const toggleItemExpansion = (itemId: number) => {
+  const toggleItemExpansion = (itemId: string) => {
     setExpandedItems(prev => 
       prev.includes(itemId) 
         ? prev.filter(id => id !== itemId)
@@ -58,7 +68,7 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
   };
 
   // Check if item is expanded
-  const isItemExpanded = (itemId: number) => {
+  const isItemExpanded = (itemId: string) => {
     return expandedItems.includes(itemId);
   };
 
@@ -76,28 +86,84 @@ const ItemOrdersTable = ({ items }: ItemOrdersTableProps) => {
   };
 
   // Update the overall status of an item
-  const updateItemStatus = (itemId: number, status: ItemStatus) => {
-    setItemsData(prev => 
-      prev.map(item => 
-        item.id === itemId ? { ...item, status } : item
-      )
-    );
+  const updateItemStatus = async (itemId: string, status: ItemStatus) => {
+    try {
+      // Find all order items for this item
+      const item = itemsData.find(i => i.id === itemId);
+      if (!item) return;
+      
+      // Update status for all order items
+      for (const order of item.orders) {
+        await orderService.updateOrderItemStatus(order.itemId, status);
+      }
+      
+      // Update local state
+      setItemsData(prev => 
+        prev.map(item => 
+          item.id === itemId ? { ...item, status } : item
+        )
+      );
+      
+      toast({
+        title: "Status Updated",
+        description: `All ${item.name} items status changed to ${status}`,
+      });
+    } catch (error) {
+      console.error("Error updating item status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update item status.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Update the status of a specific customer order
-  const updateCustomerOrderStatus = (itemId: number, orderId: string, newStatus: CustomerOrderStatus) => {
-    setItemsData(prev => 
-      prev.map(item => {
-        if (item.id === itemId) {
-          const updatedOrders = item.orders.map(order => 
-            order.orderId === orderId ? { ...order, status: newStatus } : order
-          );
-          return { ...item, orders: updatedOrders };
-        }
-        return item;
-      })
-    );
+  const updateCustomerOrderStatus = async (itemId: string, orderId: string, newStatus: CustomerOrderStatus) => {
+    try {
+      // Find the specific order item
+      const item = itemsData.find(i => i.id === itemId);
+      if (!item) return;
+      
+      const order = item.orders.find(o => o.orderId === orderId);
+      if (!order) return;
+      
+      await orderService.updateOrderItemStatus(order.itemId, newStatus);
+      
+      // Update local state
+      setItemsData(prev => 
+        prev.map(item => {
+          if (item.id === itemId) {
+            const updatedOrders = item.orders.map(order => 
+              order.orderId === orderId ? { ...order, status: newStatus } : order
+            );
+            return { ...item, orders: updatedOrders };
+          }
+          return item;
+        })
+      );
+      
+      toast({
+        title: "Status Updated",
+        description: `Order status changed to ${newStatus}`,
+      });
+    } catch (error) {
+      console.error("Error updating customer order status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update order status.",
+        variant: "destructive"
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="w-full flex justify-center items-center h-64">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <Card className="bg-white shadow rounded-lg border border-gray-200">

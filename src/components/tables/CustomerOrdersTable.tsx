@@ -1,12 +1,15 @@
 
 import React, { useState } from 'react';
-import { Order, OrderStatus } from '@/lib/data';
+import { Order } from '@/types/supabase';
 import { cn } from '@/lib/utils';
 import StatusBadge from '@/components/StatusBadge';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CustomerOrderItems from '@/components/tables/CustomerOrderItems';
 import OrdersPagination from '@/components/table/OrdersPagination';
+import { orderService } from '@/services/orderService';
+import { useToast } from '@/hooks/use-toast';
+import { Spinner } from '@/components/ui/spinner';
 import { 
   Table, 
   TableHeader, 
@@ -28,6 +31,7 @@ interface CustomerOrdersTableProps {
   indexOfFirstOrder: number;
   indexOfLastOrder: number;
   totalOrders: number;
+  loading: boolean;
   setCurrentPage: (page: number) => void;
 }
 
@@ -38,24 +42,41 @@ const CustomerOrdersTable = ({
   indexOfFirstOrder,
   indexOfLastOrder,
   totalOrders,
+  loading,
   setCurrentPage
 }: CustomerOrdersTableProps) => {
-  const [expandedRows, setExpandedRows] = useState<number[]>([]);
-  const [orderStatuses, setOrderStatuses] = useState<Record<string, OrderStatus>>(
-    orders.reduce((acc, order) => ({ ...acc, [order.orderId]: order.status }), {})
-  );
-
+  const [expandedRows, setExpandedRows] = useState<string[]>([]);
+  const [orderDetails, setOrderDetails] = useState<Record<string, any>>({});
+  const { toast } = useToast();
+  
   // Toggle row expansion
-  const toggleRowExpansion = (orderId: number) => {
-    setExpandedRows(prev => 
-      prev.includes(orderId) 
-        ? prev.filter(id => id !== orderId)
-        : [...prev, orderId]
-    );
+  const toggleRowExpansion = async (orderId: string) => {
+    if (expandedRows.includes(orderId)) {
+      setExpandedRows(prev => prev.filter(id => id !== orderId));
+    } else {
+      setExpandedRows(prev => [...prev, orderId]);
+      
+      // Fetch order details if not already loaded
+      if (!orderDetails[orderId]) {
+        try {
+          const details = await orderService.getOrderWithItems(orderId);
+          if (details) {
+            setOrderDetails(prev => ({ ...prev, [orderId]: details }));
+          }
+        } catch (error) {
+          console.error(`Error fetching details for order ${orderId}:`, error);
+          toast({
+            title: "Error",
+            description: "Failed to load order details.",
+            variant: "destructive"
+          });
+        }
+      }
+    }
   };
   
   // Check if row is expanded
-  const isRowExpanded = (orderId: number) => {
+  const isRowExpanded = (orderId: string) => {
     return expandedRows.includes(orderId);
   };
 
@@ -76,20 +97,50 @@ const CustomerOrdersTable = ({
   };
 
   // Handle status change for an item
-  const handleItemStatusChange = (
+  const handleItemStatusChange = async (
     orderId: string, 
-    itemId: number, 
+    itemId: string, 
     newStatus: 'Not Started' | 'Started' | 'Finished' | 'Ready for Hand Over'
   ) => {
-    // In a real app, this would update the status in the backend
-    console.log(`Item ${itemId} in order ${orderId} status changed to ${newStatus}`);
+    try {
+      await orderService.updateOrderItemStatus(itemId, newStatus);
+      
+      // Update local state
+      setOrderDetails(prev => {
+        const order = prev[orderId];
+        if (!order) return prev;
+        
+        const updatedItems = order.items.map((item: any) => 
+          item.id === itemId ? { ...item, status: newStatus } : item
+        );
+        
+        return {
+          ...prev,
+          [orderId]: { ...order, items: updatedItems }
+        };
+      });
+      
+      toast({
+        title: "Status Updated",
+        description: `Item status changed to ${newStatus}`,
+      });
+    } catch (error) {
+      console.error(`Error updating item status:`, error);
+      toast({
+        title: "Error",
+        description: "Failed to update item status.",
+        variant: "destructive"
+      });
+    }
   };
 
-  // Handle overall order status change
-  const handleOrderStatusChange = (orderId: string, newStatus: OrderStatus) => {
-    setOrderStatuses(prev => ({ ...prev, [orderId]: newStatus }));
-    console.log(`Order ${orderId} status changed to ${newStatus}`);
-  };
+  if (loading) {
+    return (
+      <div className="w-full flex justify-center items-center h-64">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -123,13 +174,13 @@ const CustomerOrdersTable = ({
                     </Collapsible>
                   </TableCell>
                   <TableCell className="font-medium text-coffee-green">
-                    {order.orderId}
+                    {order.order_id}
                     <div className="text-xs text-gray-500 mt-1">
-                      {formatDate(order.date)}
+                      {formatDate(order.created_at)}
                     </div>
                   </TableCell>
-                  <TableCell>{order.customer}</TableCell>
-                  <TableCell><StatusBadge status={orderStatuses[order.orderId] || order.status} /></TableCell>
+                  <TableCell>{order.customer_name}</TableCell>
+                  <TableCell><StatusBadge status={order.status} /></TableCell>
                   <TableCell className="text-right">{formatAmount(order.amount)}</TableCell>
                 </TableRow>
                 <TableRow className={cn(isRowExpanded(order.id) ? "" : "hidden")}>
@@ -137,12 +188,19 @@ const CustomerOrdersTable = ({
                     <Collapsible open={isRowExpanded(order.id)}>
                       <CollapsibleContent>
                         <div className="px-4 py-2 bg-milk-sugar/10">
-                          <CustomerOrderItems 
-                            items={order.items} 
-                            orderId={order.orderId}
-                            customerName={order.customer}
-                            onStatusChange={handleItemStatusChange}
-                          />
+                          {orderDetails[order.id] ? (
+                            <CustomerOrderItems 
+                              items={orderDetails[order.id].items || []} 
+                              orderId={order.id}
+                              customerName={order.customer_name}
+                              onStatusChange={handleItemStatusChange}
+                            />
+                          ) : (
+                            <div className="p-4 text-center">
+                              <Spinner />
+                              <p className="text-sm text-gray-500 mt-2">Loading order details...</p>
+                            </div>
+                          )}
                         </div>
                       </CollapsibleContent>
                     </Collapsible>

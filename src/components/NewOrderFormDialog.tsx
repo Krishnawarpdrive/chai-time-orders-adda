@@ -7,68 +7,17 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-
-interface MenuItem {
-  id: number;
-  name: string;
-  price: number;
-  category: 'coffee' | 'tea' | 'snack';
-}
+import { orderService } from '@/services/orderService';
+import { MenuItem, Customer } from '@/types/supabase';
+import { Spinner } from '@/components/ui/spinner';
 
 interface CartItem extends MenuItem {
   quantity: number;
 }
 
-interface Customer {
-  name: string;
-  phone: string;
-  dob: string;
-  badge: 'New' | 'Frequent' | 'Periodic';
-}
-
 interface NewOrderFormDialogProps {
   onClose: () => void;
 }
-
-// Mock database of customers
-const customerDatabase: Customer[] = [
-  { name: 'Rajesh Kumar', phone: '9001234567', dob: '15 Jan 1985', badge: 'Frequent' },
-  { name: 'Ankita Sharma', phone: '8007654321', dob: '21 Apr 1992', badge: 'Periodic' }
-];
-
-// Menu items with specified prices
-const menu: MenuItem[] = [
-  {
-    id: 1,
-    name: "Coffee",
-    price: 18,
-    category: 'coffee'
-  },
-  {
-    id: 2,
-    name: "Biscuit",
-    price: 12,
-    category: 'snack'
-  },
-  {
-    id: 3,
-    name: "Lemon Tea",
-    price: 18,
-    category: 'tea'
-  },
-  {
-    id: 4,
-    name: "Black Coffee",
-    price: 22,
-    category: 'coffee'
-  },
-  {
-    id: 5,
-    name: "Masala Chai",
-    price: 18,
-    category: 'tea'
-  }
-];
 
 const NewOrderFormDialog: React.FC<NewOrderFormDialogProps> = ({ onClose }) => {
   const { toast } = useToast();
@@ -78,42 +27,73 @@ const NewOrderFormDialog: React.FC<NewOrderFormDialogProps> = ({ onClose }) => {
   const [dob, setDob] = useState('');
   const [customerBadge, setCustomerBadge] = useState<'New' | 'Frequent' | 'Periodic'>('New');
   const [showQrCode, setShowQrCode] = useState(false);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loadingMenu, setLoadingMenu] = useState(true);
+  const [creatingOrder, setCreatingOrder] = useState(false);
+
+  // Fetch menu items from Supabase
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      setLoadingMenu(true);
+      try {
+        const items = await orderService.getMenuItems();
+        setMenuItems(items);
+      } catch (error) {
+        console.error("Error fetching menu items:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load menu items. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoadingMenu(false);
+      }
+    };
+    
+    fetchMenuItems();
+  }, [toast]);
 
   // Check if customer exists when phone number changes
   useEffect(() => {
-    if (phoneNumber.length >= 10) {
-      const existingCustomer = customerDatabase.find(c => 
-        c.phone.includes(phoneNumber.substring(phoneNumber.length - 10))
-      );
-      
-      if (existingCustomer) {
-        setCustomerName(existingCustomer.name);
-        setDob(existingCustomer.dob);
-        setCustomerBadge(existingCustomer.badge);
-        
-        toast({
-          title: "Existing Customer Found",
-          description: `Welcome back, ${existingCustomer.name}!`,
-        });
-      } else {
-        // Reset fields if no match found
-        if (customerName) {
-          setCustomerName('');
-          setDob('');
-          setCustomerBadge('New');
+    const checkCustomer = async () => {
+      if (phoneNumber.length >= 10) {
+        try {
+          const existingCustomer = await orderService.getCustomerByPhone(phoneNumber);
+          
+          if (existingCustomer) {
+            setCustomerName(existingCustomer.name);
+            setDob(existingCustomer.dob || '');
+            setCustomerBadge(existingCustomer.badge as 'New' | 'Frequent' | 'Periodic');
+            
+            toast({
+              title: "Existing Customer Found",
+              description: `Welcome back, ${existingCustomer.name}!`,
+            });
+          } else {
+            // Reset fields if no match found and fields are populated
+            if (customerName) {
+              setCustomerName('');
+              setDob('');
+              setCustomerBadge('New');
+            }
+          }
+        } catch (error) {
+          console.error("Error checking customer:", error);
         }
       }
-    }
+    };
+    
+    checkCustomer();
   }, [phoneNumber, toast]);
 
   // Generate order ID from customer name and phone number
   const generateOrderId = () => {
     if (customerName.length < 2 || phoneNumber.length < 2) return '';
     
-    const namePrefix = customerName.substring(0, 2);
+    const namePrefix = customerName.substring(0, 2).toUpperCase();
     const phoneSuffix = phoneNumber.substring(phoneNumber.length - 2);
     
-    return namePrefix + phoneSuffix;
+    return `${namePrefix}${phoneSuffix}-${new Date().getTime().toString().slice(-4)}`;
   };
 
   // Get the appropriate icon based on item category
@@ -153,7 +133,7 @@ const NewOrderFormDialog: React.FC<NewOrderFormDialogProps> = ({ onClose }) => {
   };
 
   // Remove item from cart
-  const removeFromCart = (itemId: number) => {
+  const removeFromCart = (itemId: string) => {
     setCart((prevCart) => {
       const existingItemIndex = prevCart.findIndex(cartItem => cartItem.id === itemId);
       
@@ -178,12 +158,12 @@ const NewOrderFormDialog: React.FC<NewOrderFormDialogProps> = ({ onClose }) => {
   }, 0);
 
   // Check if item is in cart
-  const isInCart = (itemId: number) => {
+  const isInCart = (itemId: string) => {
     return cart.some(item => item.id === itemId);
   };
 
   // Get quantity of item in cart
-  const getQuantityInCart = (itemId: number) => {
+  const getQuantityInCart = (itemId: string) => {
     const item = cart.find(item => item.id === itemId);
     return item ? item.quantity : 0;
   };
@@ -212,14 +192,79 @@ const NewOrderFormDialog: React.FC<NewOrderFormDialogProps> = ({ onClose }) => {
   };
 
   // Handle order submission after payment
-  const handleSubmitOrder = () => {
+  const handleSubmitOrder = async () => {
+    setCreatingOrder(true);
     const orderId = generateOrderId();
-    toast({
-      title: "Order Created",
-      description: `Order ${orderId} has been created successfully.`,
-    });
-    onClose();
+    
+    try {
+      // First, check if we need to create a new customer
+      let customer: Customer | null = null;
+      
+      if (phoneNumber) {
+        customer = await orderService.getCustomerByPhone(phoneNumber);
+        
+        if (!customer && customerName) {
+          // Create new customer
+          customer = await orderService.createCustomer({
+            name: customerName,
+            phone_number: phoneNumber,
+            dob,
+            badge: customerBadge
+          });
+        }
+      }
+      
+      // Create order
+      const order = await orderService.createOrder(
+        {
+          order_id: orderId,
+          customer_name: customerName,
+          phone_number: phoneNumber,
+          dob,
+          customer_badge: customerBadge,
+          amount: totalPrice,
+          status: 'Pending'
+        },
+        cart.map(item => ({
+          item_id: item.id,
+          quantity: item.quantity,
+          status: 'Not Started'
+        }))
+      );
+      
+      if (order) {
+        toast({
+          title: "Order Created",
+          description: `Order ${orderId} has been created successfully.`,
+        });
+        onClose();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create order. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create order. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setCreatingOrder(false);
+    }
   };
+
+  if (loadingMenu) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg w-full p-6 flex flex-col justify-center items-center h-64">
+        <Spinner size="large" />
+        <p className="mt-4 text-gray-600">Loading menu items...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-lg w-full overflow-y-auto max-h-[90vh]">
@@ -290,7 +335,7 @@ const NewOrderFormDialog: React.FC<NewOrderFormDialogProps> = ({ onClose }) => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {menu.map((item) => (
+              {menuItems.map((item) => (
                 <Card key={item.id} className="border border-gray-200 p-4">
                   <div className="flex justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -365,8 +410,16 @@ const NewOrderFormDialog: React.FC<NewOrderFormDialogProps> = ({ onClose }) => {
           <Button 
             className="bg-coffee-green text-white hover:bg-coffee-green/90 w-48"
             onClick={handleSubmitOrder}
+            disabled={creatingOrder}
           >
-            Confirm Payment
+            {creatingOrder ? (
+              <>
+                <Spinner size="small" className="mr-2" />
+                Processing...
+              </>
+            ) : (
+              'Confirm Payment'
+            )}
           </Button>
         </div>
       )}
@@ -383,6 +436,7 @@ const NewOrderFormDialog: React.FC<NewOrderFormDialogProps> = ({ onClose }) => {
             variant="outline" 
             className="px-6"
             onClick={onClose}
+            disabled={creatingOrder}
           >
             Close
           </Button>
@@ -399,6 +453,7 @@ const NewOrderFormDialog: React.FC<NewOrderFormDialogProps> = ({ onClose }) => {
             <Button 
               className="bg-gray-300 text-gray-700 hover:bg-gray-300/90 px-6"
               onClick={() => setShowQrCode(false)}
+              disabled={creatingOrder}
             >
               Back to Cart
             </Button>

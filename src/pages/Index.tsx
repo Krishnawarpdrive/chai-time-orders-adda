@@ -10,6 +10,7 @@ import { CustomerView } from '@/components/views/CustomerView';
 import { ItemView } from '@/components/views/ItemView';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import NewOrderFormDialog from '@/components/NewOrderFormDialog';
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const { toast } = useToast();
