@@ -1,16 +1,33 @@
 
 import React, { useState, useEffect } from 'react';
+import Sidebar from '@/components/Sidebar';
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Package, ShoppingBag, AlertCircle } from 'lucide-react';
+import { Package, ShoppingBag, AlertCircle, Bell } from 'lucide-react';
 import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { type InventoryItem } from "@/hooks/useInventory";
 
 const Products = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+  
+  // Handle scroll events to detect when to collapse the header
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 40);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   // Fetch inventory data
   useEffect(() => {
@@ -45,116 +62,146 @@ const Products = () => {
   const inventoryValue = inventory.reduce((total, item) => total + (item.quantity * item.price_per_unit), 0);
 
   return (
-    <div className="flex-1 p-6 bg-milk-sugar overflow-y-auto">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="font-hackney text-3xl text-coffee-green mb-6">Inventory Management</h1>
-        
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium">Total Products</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalItems}</div>
-              <p className="text-sm text-muted-foreground">Items in inventory</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium">Low Stock Alert</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-500">{lowStockCount}</div>
-              <p className="text-sm text-muted-foreground">Items below reorder level</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium">Inventory Value</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{inventoryValue.toFixed(2)}</div>
-              <p className="text-sm text-muted-foreground">Total value of stock</p>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Tabs for inventory view */}
-        <Card>
-          <CardContent className="pt-6">
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-4">
-                <TabsTrigger value="all">All Items</TabsTrigger>
-                <TabsTrigger value="low">Low Stock</TabsTrigger>
-                <TabsTrigger value="healthy">Healthy Stock</TabsTrigger>
-              </TabsList>
+    <div className="min-h-screen flex">
+      {/* Sidebar */}
+      <Sidebar />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Header - Collapsing on scroll */}
+        <header className={`bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-40 transition-all duration-300 ${isScrolled ? 'h-12 py-1' : 'h-auto'}`}>
+          <h1 className={`font-hackney ${isScrolled ? 'text-xl' : 'text-2xl'} text-coffee-green transition-all duration-300`}>Staff Dashboard</h1>
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className={`${isScrolled ? 'h-4 w-4' : 'h-5 w-5'} transition-all duration-300`} />
+              <span className="absolute top-0 right-0 h-2 w-2 bg-bisi-orange rounded-full"></span>
+            </Button>
+            <div className="flex items-center gap-3">
+              <span className={`text-sm font-medium hidden md:block ${isScrolled ? 'opacity-0 w-0' : ''} transition-all duration-300`}>Admin User</span>
+              <Avatar className={isScrolled ? 'h-6 w-6' : 'h-8 w-8'}>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>AD</AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+        </header>
+
+        {/* Content */}
+        <div className="flex-1 p-6 bg-milk-sugar overflow-y-auto">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-6">
+              <h1 className="font-hackney text-3xl text-coffee-green mb-1">Inventory Management</h1>
+              <p className="text-gray-600 text-sm">Manage your product inventory efficiently.</p>
+            </div>
+            
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-medium">Total Products</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{totalItems}</div>
+                  <p className="text-sm text-muted-foreground">Items in inventory</p>
+                </CardContent>
+              </Card>
               
-              {loading && (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Spinner className="h-8 w-8 text-coffee-green" />
-                  <p className="mt-2 text-sm text-gray-500">Loading inventory...</p>
-                </div>
-              )}
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
-                  <div className="flex items-center gap-2 text-red-700">
-                    <AlertCircle size={16} />
-                    <p className="text-sm font-medium">{error}</p>
-                  </div>
-                </div>
-              )}
-
-              <TabsContent value="all" className="mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {inventory.map((item) => (
-                    <ProductCard key={item.id} item={item} />
-                  ))}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-medium">Low Stock Alert</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-500">{lowStockCount}</div>
+                  <p className="text-sm text-muted-foreground">Items below reorder level</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-medium">Inventory Value</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">₹{inventoryValue.toFixed(2)}</div>
+                  <p className="text-sm text-muted-foreground">Total value of stock</p>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Tabs for inventory view */}
+            <Card>
+              <CardContent className="pt-6">
+                <Tabs defaultValue="all" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 mb-4">
+                    <TabsTrigger value="all">All Items</TabsTrigger>
+                    <TabsTrigger value="low">Low Stock</TabsTrigger>
+                    <TabsTrigger value="healthy">Healthy Stock</TabsTrigger>
+                  </TabsList>
                   
-                  {inventory.length === 0 && !loading && !error && (
-                    <div className="col-span-full text-center py-10 text-gray-500">
-                      <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
-                      <p className="mt-2">No inventory items found</p>
+                  {loading && (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <Spinner className="h-8 w-8 text-coffee-green" />
+                      <p className="mt-2 text-sm text-gray-500">Loading inventory...</p>
                     </div>
                   )}
-                </div>
-              </TabsContent>
 
-              <TabsContent value="low" className="mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {lowStockItems.map((item) => (
-                    <ProductCard key={item.id} item={item} isLowStock />
-                  ))}
-                  
-                  {lowStockItems.length === 0 && !loading && !error && (
-                    <div className="col-span-full text-center py-10 text-gray-500">
-                      <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
-                      <p className="mt-2">No items with low stock</p>
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+                      <div className="flex items-center gap-2 text-red-700">
+                        <AlertCircle size={16} />
+                        <p className="text-sm font-medium">{error}</p>
+                      </div>
                     </div>
                   )}
-                </div>
-              </TabsContent>
 
-              <TabsContent value="healthy" className="mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {healthyStockItems.map((item) => (
-                    <ProductCard key={item.id} item={item} />
-                  ))}
-                  
-                  {healthyStockItems.length === 0 && !loading && !error && (
-                    <div className="col-span-full text-center py-10 text-gray-500">
-                      <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
-                      <p className="mt-2">No items with healthy stock levels</p>
+                  <TabsContent value="all" className="mt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {inventory.map((item) => (
+                        <ProductCard key={item.id} item={item} />
+                      ))}
+                      
+                      {inventory.length === 0 && !loading && !error && (
+                        <div className="col-span-full text-center py-10 text-gray-500">
+                          <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
+                          <p className="mt-2">No inventory items found</p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                  </TabsContent>
+
+                  <TabsContent value="low" className="mt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {lowStockItems.map((item) => (
+                        <ProductCard key={item.id} item={item} isLowStock />
+                      ))}
+                      
+                      {lowStockItems.length === 0 && !loading && !error && (
+                        <div className="col-span-full text-center py-10 text-gray-500">
+                          <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
+                          <p className="mt-2">No items with low stock</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="healthy" className="mt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {healthyStockItems.map((item) => (
+                        <ProductCard key={item.id} item={item} />
+                      ))}
+                      
+                      {healthyStockItems.length === 0 && !loading && !error && (
+                        <div className="col-span-full text-center py-10 text-gray-500">
+                          <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
+                          <p className="mt-2">No items with healthy stock levels</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
