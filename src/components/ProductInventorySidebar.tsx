@@ -37,16 +37,22 @@ const ProductInventorySidebar = () => {
     const fetchInventory = async () => {
       setLoading(true);
       try {
+        // Using the generic query method to avoid type errors
         const { data, error } = await supabase
           .from('inventory')
           .select('*')
-          .order('name');
+          .order('name') as unknown as { 
+            data: InventoryItem[] | null; 
+            error: Error | null 
+          };
 
         if (error) {
           throw error;
         }
 
-        setInventory(data);
+        if (data) {
+          setInventory(data);
+        }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch inventory data');
         console.error('Error fetching inventory:', err);
@@ -78,7 +84,9 @@ const ProductInventorySidebar = () => {
           quantity: newQuantity,
           updated_at: new Date().toISOString()
         })
-        .eq('id', selectedItem.id);
+        .eq('id', selectedItem.id) as unknown as {
+          error: Error | null
+        };
 
       if (error) throw error;
 
