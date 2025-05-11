@@ -31,7 +31,9 @@ const App = () => {
             <Route path="/categories" element={<Home />} />
             <Route path="/products" element={<Products />} />
             <Route path="/offers" element={<Home />} />
-            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/orders" element={<Home />} />
+            <Route path="/profile" element={<Home />} />
+            <Route path="/cart" element={<Home />} />
             <Route path="/refer" element={<ReferPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

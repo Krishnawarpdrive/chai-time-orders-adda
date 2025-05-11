@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { personas } from './SidebarPersonaSelector';
 
@@ -24,6 +24,26 @@ const CustomerMobileMenu: React.FC<CustomerMobileMenuProps> = ({
   handlePersonaChange,
   onClose
 }) => {
+  const navigate = useNavigate();
+
+  // Listen for toggle events from other components
+  useEffect(() => {
+    const handleToggleMenu = () => {
+      onClose();
+    };
+    
+    window.addEventListener('toggle-mobile-menu', handleToggleMenu);
+    return () => {
+      window.removeEventListener('toggle-mobile-menu', handleToggleMenu);
+    };
+  }, [onClose]);
+
+  // Handle navigation and close the menu
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 bg-[#1e483c] text-white z-50 flex flex-col">
       <div className="p-4 flex justify-between items-center border-b border-white/20">

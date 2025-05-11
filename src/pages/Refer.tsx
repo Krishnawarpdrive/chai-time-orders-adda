@@ -5,10 +5,12 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useState, useEffect } from 'react';
 import { Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Refer = () => {
   const isMobile = useIsMobile();
   const [selectedPersona, setSelectedPersona] = useState('customer');
+  const navigate = useNavigate();
   
   // Get selected persona from local storage
   useEffect(() => {
@@ -34,23 +36,37 @@ const Refer = () => {
     alert("Sharing referral code via WhatsApp!");
   };
 
+  const handleToggleMobileMenu = () => {
+    const event = new Event('toggle-mobile-menu');
+    window.dispatchEvent(event);
+  };
+
   // Customer mobile view
   if (isMobile && selectedPersona === 'customer') {
     return (
       <div className="min-h-screen bg-[#f8f3e3]">
         {/* Mobile Header for Customer */}
         <header className="bg-[#1e483c] text-white p-4 flex justify-between items-center">
-          <button className="text-white" onClick={() => window.history.back()}>
-            <span className="sr-only">Back</span>
+          <button className="text-white" onClick={handleToggleMobileMenu}>
+            <span className="sr-only">Menu</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m15 18-6-6 6-6" />
+              <line x1="4" x2="20" y1="12" y2="12" />
+              <line x1="4" x2="20" y1="6" y2="6" />
+              <line x1="4" x2="20" y1="18" y2="18" />
             </svg>
           </button>
           <h1 className="text-2xl font-bold text-center">COASTERS</h1>
-          <div className="w-8"></div> {/* Empty div for spacing */}
+          <Link to="/cart" className="relative">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+              <path d="M3 6h18" />
+              <path d="M16 10a4 4 0 0 1-8 0" />
+            </svg>
+            <span className="absolute top-0 right-0 h-2 w-2 bg-[#e46546] rounded-full"></span>
+          </Link>
         </header>
 
-        <main className="p-4">
+        <main className="p-4 pb-24"> {/* Add padding at bottom for mobile nav */}
           <h1 className="text-3xl font-bold text-[#1e483c] mb-8">YOUR REFERRALS</h1>
           
           <div className="bg-white rounded-lg border-2 border-[#e9c766] overflow-hidden mb-6">
@@ -100,6 +116,46 @@ const Refer = () => {
             </div>
           </div>
         </main>
+
+        {/* Mobile Navigation Bar */}
+        <nav className="fixed bottom-0 left-0 right-0 bg-[#1e483c] text-white px-2 py-3">
+          <div className="flex justify-around items-center">
+            <Link to="/" className="flex flex-col items-center text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+              <span className="text-xs mt-1">Home</span>
+            </Link>
+            <Link to="/orders" className="flex flex-col items-center text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                <path d="m9 14 2 2 4-4" />
+              </svg>
+              <span className="text-xs mt-1">Orders</span>
+            </Link>
+            <Link to="/refer" className="flex flex-col items-center text-[#e9c766]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                <polyline points="16 6 12 2 8 6" />
+                <line x1="12" x2="12" y1="2" y2="15" />
+              </svg>
+              <span className="text-xs mt-1">Refer</span>
+            </Link>
+            <Link to="/cart" className="flex flex-col items-center relative text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="8" cy="21" r="1" />
+                <circle cx="19" cy="21" r="1" />
+                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+              </svg>
+              <span className="absolute -top-1 -right-1 bg-[#e46546] text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                2
+              </span>
+              <span className="text-xs mt-1">Cart</span>
+            </Link>
+          </div>
+        </nav>
       </div>
     );
   }

@@ -7,6 +7,7 @@ import SidebarPersonaSelector, { personas } from './sidebar/SidebarPersonaSelect
 import SidebarNavItems from './sidebar/SidebarNavItems';
 import CustomerMobileMenu from './sidebar/CustomerMobileMenu';
 import { getActiveNavItems } from './sidebar/navItems';
+import { useLocation } from 'react-router-dom';
 
 interface SidebarProps {
   className?: string;
@@ -17,6 +18,7 @@ export function Sidebar({ className }: SidebarProps) {
   const isMobile = useIsMobile();
   const [selectedPersona, setSelectedPersona] = useState<string>("customer");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
   
   // Auto-collapse sidebar on mobile
   useEffect(() => {
@@ -50,6 +52,7 @@ export function Sidebar({ className }: SidebarProps) {
   const activeNavItems = getActiveNavItems(selectedPersona);
 
   // Special mobile menu for customer persona that matches the screenshots
+  // Only show the menu when it's explicitly opened
   if (isMobile && selectedPersona === 'customer' && mobileMenuOpen) {
     return (
       <CustomerMobileMenu 
@@ -63,7 +66,6 @@ export function Sidebar({ className }: SidebarProps) {
 
   // Find the current persona icon
   const currentPersona = personas.find(p => p.value === selectedPersona);
-  // Important: Don't use as a function, use as a component
   const PersonaIcon = currentPersona ? currentPersona.icon : null;
 
   return (
