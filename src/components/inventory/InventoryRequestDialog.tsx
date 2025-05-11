@@ -23,6 +23,7 @@ interface InventoryRequestDialogProps {
   onOpenChange: (open: boolean) => void;
   requestItems: InventoryRequestItem[];
   onClearRequest: () => void;
+  estimatedDeliveryDate: string;
 }
 
 const InventoryRequestDialog = ({
@@ -30,20 +31,10 @@ const InventoryRequestDialog = ({
   onOpenChange,
   requestItems,
   onClearRequest,
+  estimatedDeliveryDate,
 }: InventoryRequestDialogProps) => {
   const { toast } = useToast();
   
-  // Calculate estimated delivery date (5 days from today)
-  const estimatedDeliveryDate = new Date();
-  estimatedDeliveryDate.setDate(estimatedDeliveryDate.getDate() + 5);
-  
-  const formattedDeliveryDate = estimatedDeliveryDate.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
   const handleConfirmRequest = () => {
     // In a real application, this would submit the request to a backend
     toast({
@@ -76,7 +67,7 @@ const InventoryRequestDialog = ({
         <div className="py-2">
           <div className="flex items-center gap-2 text-sm mb-3 bg-milk-sugar/50 p-2 rounded">
             <Calendar size={16} className="text-coffee-green" />
-            <span>Estimated delivery: <span className="font-semibold">{formattedDeliveryDate}</span></span>
+            <span>Estimated delivery: <span className="font-semibold">{estimatedDeliveryDate}</span></span>
           </div>
           
           {requestItems.length > 0 ? (
