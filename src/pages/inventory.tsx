@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { ProductInventorySidebar } from '@/components/ProductInventorySidebar';
+import ProductInventorySidebar from '@/components/ProductInventorySidebar';
 
 export default function InventoryPage() {
   return (

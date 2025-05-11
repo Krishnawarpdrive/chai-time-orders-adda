@@ -2,6 +2,10 @@
 import React from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { OrdersTable } from '@/components/OrdersTable';
+import { Order } from '@/lib/data';
+
+// Sample orders data for initial rendering
+const sampleOrders: Order[] = [];
 
 export default function OrdersPage() {
   return (
@@ -15,7 +19,7 @@ export default function OrdersPage() {
           </p>
           
           <div className="mt-8">
-            <OrdersTable />
+            <OrdersTable orders={sampleOrders} />
           </div>
         </div>
       </main>
