@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/collapsible";
 import CustomerOrderItems from './CustomerOrderItems';
 import { Spinner } from '@/components/ui/spinner';
+import { OrderStatus } from '@/types/supabase';
 
 interface CustomerOrderExpandedProps {
   orderId: string;
