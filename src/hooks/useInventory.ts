@@ -10,6 +10,8 @@ export interface InventoryItem {
   reorder_level: number;
   price_per_unit: number;
   unit: string;
+  category?: string; // For categorizing inventory (e.g., Beverages, Supplies)
+  last_restocked?: string; // Date when inventory was last updated
 }
 
 export const useInventory = () => {
@@ -48,7 +50,8 @@ export const useInventory = () => {
         .from('inventory')
         .update({
           quantity: newQuantity,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          last_restocked: new Date().toISOString() // Track when it was restocked
         })
         .eq('id', itemId);
 
@@ -79,10 +82,27 @@ export const useInventory = () => {
     }
   };
 
+  // Group inventory items by category
+  const getInventoryByCategory = () => {
+    const categories: Record<string, InventoryItem[]> = {};
+    
+    inventory.forEach(item => {
+      const category = item.category || 'Uncategorized';
+      if (!categories[category]) {
+        categories[category] = [];
+      }
+      categories[category].push(item);
+    });
+    
+    return categories;
+  };
+
   return {
     inventory,
     loading,
     error,
-    updateInventoryItem
+    updateInventoryItem,
+    getInventoryByCategory,
+    refreshInventory: fetchInventory
   };
 };

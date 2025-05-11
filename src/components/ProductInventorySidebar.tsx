@@ -10,7 +10,7 @@ import RequestFooter from "@/components/inventory/RequestFooter";
 import { format, addBusinessDays } from 'date-fns';
 
 const ProductInventorySidebar = () => {
-  const { inventory, loading, error, updateInventoryItem } = useInventory();
+  const { inventory, loading, error, updateInventoryItem, getInventoryByCategory } = useInventory();
   const { toast } = useToast();
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
@@ -76,6 +76,9 @@ const ProductInventorySidebar = () => {
   // Calculate total items in request
   const totalRequestItems = requestItems.reduce((acc, item) => acc + item.requestQuantity, 0);
 
+  // Group inventory by category for display
+  const inventoryByCategory = getInventoryByCategory();
+
   return (
     <div className="fixed right-0 top-0 h-screen w-72 border-l border-gray-200 bg-white shadow-lg overflow-y-auto pb-20">
       <SidebarHeader 
@@ -86,14 +89,19 @@ const ProductInventorySidebar = () => {
       />
       
       <div className="p-4 pt-0">
-        <InventoryList
-          inventory={inventory}
-          loading={loading}
-          error={error}
-          isRequestMode={isRequestMode}
-          onUpdateClick={handleUpdateInventory}
-          onAddToRequest={handleAddToRequest}
-        />
+        {Object.entries(inventoryByCategory).map(([category, items]) => (
+          <div key={category} className="mb-4">
+            <h3 className="font-semibold text-coffee-green mb-2 px-1 border-b border-gray-100 pb-1">{category}</h3>
+            <InventoryList
+              inventory={items}
+              loading={loading}
+              error={error}
+              isRequestMode={isRequestMode}
+              onUpdateClick={handleUpdateInventory}
+              onAddToRequest={handleAddToRequest}
+            />
+          </div>
+        ))}
       </div>
 
       {isRequestMode && requestItems.length > 0 && (
@@ -115,7 +123,7 @@ const ProductInventorySidebar = () => {
         onOpenChange={setIsRequestDialogOpen}
         requestItems={requestItems}
         onClearRequest={clearRequest}
-        estimatedDeliveryDate={estimatedDeliveryDate.toISOString()} // Fix: Convert Date to string
+        estimatedDeliveryDate={estimatedDeliveryDate.toISOString()} // Convert Date to string
       />
     </div>
   );

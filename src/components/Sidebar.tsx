@@ -1,7 +1,19 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Users, Package, Tag, Percent, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
+import { 
+  Users, 
+  Package, 
+  Tag, 
+  Percent, 
+  ClipboardList, 
+  ChevronLeft, 
+  ChevronRight,
+  BarChart,
+  Users as StaffIcon,
+  MapPin,
+  DatabaseIcon
+} from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
@@ -22,14 +34,30 @@ export function Sidebar({ className }: SidebarProps) {
 
   const navItems: NavItem[] = [
     { 
+      title: 'Orders', 
+      icon: ClipboardList, 
+      path: '/',
+      badge: 5
+    },
+    { 
+      title: 'Inventory', 
+      icon: DatabaseIcon, 
+      path: '/inventory'
+    },
+    { 
       title: 'Customers', 
       icon: Users, 
       path: '/customers'
     },
     { 
-      title: 'Category', 
-      icon: Tag, 
-      path: '/categories'
+      title: 'Staff', 
+      icon: StaffIcon, 
+      path: '/staff'
+    },
+    { 
+      title: 'Outlets', 
+      icon: MapPin, 
+      path: '/outlets'
     },
     { 
       title: 'Products', 
@@ -37,15 +65,19 @@ export function Sidebar({ className }: SidebarProps) {
       path: '/products'
     },
     { 
+      title: 'Categories', 
+      icon: Tag, 
+      path: '/categories'
+    },
+    { 
       title: 'Offers', 
       icon: Percent, 
       path: '/offers'
     },
     { 
-      title: 'Orders', 
-      icon: ClipboardList, 
-      path: '/',
-      badge: 5
+      title: 'Reports', 
+      icon: BarChart, 
+      path: '/reports'
     },
   ];
 
@@ -125,6 +157,6 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
     </aside>
   );
-}
+};
 
 export default Sidebar;

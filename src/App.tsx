@@ -7,6 +7,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Index"; // Corrected import - using the correct casing
 import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
+import InventoryPage from "./pages/Inventory";
+import StaffPage from "./pages/Staff";
+import OutletsPage from "./pages/Outlets";
+import ReportsPage from "./pages/Reports";
 
 const queryClient = new QueryClient();
 
@@ -20,9 +24,13 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/customers" element={<Home />} />
+            <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/staff" element={<StaffPage />} />
+            <Route path="/outlets" element={<OutletsPage />} />
             <Route path="/categories" element={<Home />} />
             <Route path="/products" element={<Products />} />
             <Route path="/offers" element={<Home />} />
+            <Route path="/reports" element={<ReportsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
