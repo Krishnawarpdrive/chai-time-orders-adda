@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { type InventoryItem } from "@/hooks/useInventory";
-import { Plus, Check, ChevronUp, ChevronDown, AlertCircle } from 'lucide-react';
+import { Plus, Check, ChevronUp, ChevronDown, AlertCircle, ShoppingBag } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -110,7 +110,7 @@ const InventoryItem = ({
               onClick={() => setShowQuantityInput(true)}
             >
               <Plus size={16} />
-              Add Quantity
+              Add Inventory
             </Button>
           ) : (
             <>
@@ -148,7 +148,7 @@ const InventoryItem = ({
                   onClick={handleAddToRequest}
                 >
                   <Check size={16} />
-                  Confirm Request
+                  Add to Request
                 </Button>
               </div>
             </>
@@ -167,7 +167,7 @@ const InventoryItem = ({
             <Alert className="mt-2 py-2 px-3 bg-green-50 border-green-200">
               <AlertDescription className="text-xs flex items-center text-green-800">
                 <Check size={14} className="mr-1" />
-                Inventory request placed successfully!
+                Added to inventory request!
               </AlertDescription>
             </Alert>
           )}

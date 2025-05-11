@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Package, AlertCircle, Check, CalendarClock } from 'lucide-react';
+import { Package, AlertCircle, Check, CalendarClock, ShoppingBag } from 'lucide-react';
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { useInventory, type InventoryItem } from "@/hooks/useInventory";
@@ -81,88 +81,105 @@ const ProductInventorySidebar = () => {
     ? inventory.filter(item => item.quantity <= item.reorder_level * 1.5)
     : inventory;
 
-  return (
-    <div className="fixed right-0 top-0 h-screen w-72 border-l border-gray-200 bg-white shadow-lg overflow-y-auto p-4">
-      <h2 className="text-xl font-semibold mb-4 text-coffee-green flex items-center gap-2">
-        <Package size={20} />
-        Product Inventory
-      </h2>
+  // Calculate total items in request
+  const totalRequestItems = requestItems.reduce((acc, item) => acc + item.requestQuantity, 0);
 
-      <div className="mb-4 flex justify-between items-center">
-        <Button
-          onClick={toggleRequestMode}
-          variant={isRequestMode ? "default" : "outline"}
-          size="sm"
-          className={isRequestMode ? "bg-coffee-green hover:bg-coffee-green/90" : ""}
-        >
-          {isRequestMode ? (
-            <>
-              <Check size={16} />
-              Request Mode
-            </>
-          ) : (
-            "Request Inventory"
+  return (
+    <div className="fixed right-0 top-0 h-screen w-72 border-l border-gray-200 bg-white shadow-lg overflow-y-auto pb-20">
+      <div className="p-4">
+        <h2 className="text-xl font-semibold mb-4 text-coffee-green flex items-center gap-2">
+          <Package size={20} />
+          Product Inventory
+        </h2>
+
+        <div className="mb-4 flex justify-between items-center">
+          <Button
+            onClick={toggleRequestMode}
+            variant={isRequestMode ? "default" : "outline"}
+            size="sm"
+            className={isRequestMode ? "bg-coffee-green hover:bg-coffee-green/90" : ""}
+          >
+            {isRequestMode ? (
+              <>
+                <Check size={16} />
+                Request Mode
+              </>
+            ) : (
+              "Request Inventory"
+            )}
+          </Button>
+          
+          {isRequestMode && requestItems.length > 0 && (
+            <Button
+              onClick={() => setIsRequestDialogOpen(true)}
+              variant="default"
+              size="sm"
+              className="bg-bisi-orange hover:bg-bisi-orange/90"
+            >
+              Review ({requestItems.length})
+            </Button>
           )}
-        </Button>
-        
-        {isRequestMode && requestItems.length > 0 && (
+        </div>
+
+        {isRequestMode && (
+          <div className="mb-4 px-3 py-2 bg-blue-50 border border-blue-100 rounded-md flex items-center text-xs text-blue-700">
+            <CalendarClock size={14} className="mr-2 flex-shrink-0" />
+            <span>Estimated delivery: <strong>{formattedDeliveryDate}</strong></span>
+          </div>
+        )}
+
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-8">
+            <Spinner className="h-8 w-8 text-coffee-green" />
+            <p className="mt-2 text-sm text-gray-500">Loading inventory...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+            <div className="flex items-center gap-2 text-red-700">
+              <AlertCircle size={16} />
+              <p className="text-sm font-medium">{error}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {displayedInventory.map((item) => (
+            <div key={item.id} className="space-y-2">
+              <InventoryItemCard 
+                item={item}
+                onUpdateClick={handleUpdateInventory}
+                isRequestMode={isRequestMode}
+                onAddToRequest={handleAddToRequest}
+              />
+              <InventoryCardRequest
+                item={item}
+                isRequestMode={isRequestMode}
+                onAddToRequest={handleAddToRequest}
+              />
+            </div>
+          ))}
+
+          {displayedInventory.length === 0 && !loading && !error && (
+            <div className="text-center py-6 text-gray-500">
+              <p>No inventory items found</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {isRequestMode && requestItems.length > 0 && (
+        <div className="fixed bottom-0 right-0 w-72 bg-white border-t border-gray-200 p-4 shadow-lg">
           <Button
             onClick={() => setIsRequestDialogOpen(true)}
-            variant="default"
-            size="sm"
-            className="bg-bisi-orange hover:bg-bisi-orange/90"
+            className="w-full py-6 bg-bisi-orange hover:bg-bisi-orange/90 text-white font-medium"
           >
-            Review ({requestItems.length})
+            <ShoppingBag className="mr-2" />
+            Request Order ({totalRequestItems} items)
           </Button>
-        )}
-      </div>
-
-      {isRequestMode && (
-        <div className="mb-4 px-3 py-2 bg-blue-50 border border-blue-100 rounded-md flex items-center text-xs text-blue-700">
-          <CalendarClock size={14} className="mr-2 flex-shrink-0" />
-          <span>Estimated delivery: <strong>{formattedDeliveryDate}</strong></span>
         </div>
       )}
-
-      {loading && (
-        <div className="flex flex-col items-center justify-center py-8">
-          <Spinner className="h-8 w-8 text-coffee-green" />
-          <p className="mt-2 text-sm text-gray-500">Loading inventory...</p>
-        </div>
-      )}
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
-          <div className="flex items-center gap-2 text-red-700">
-            <AlertCircle size={16} />
-            <p className="text-sm font-medium">{error}</p>
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {displayedInventory.map((item) => (
-          <div key={item.id} className="space-y-2">
-            <InventoryItemCard 
-              item={item}
-              onUpdateClick={handleUpdateInventory}
-              isRequestMode={isRequestMode}
-              onAddToRequest={handleAddToRequest}
-            />
-            <InventoryCardRequest
-              item={item}
-              isRequestMode={isRequestMode}
-              onAddToRequest={handleAddToRequest}
-            />
-          </div>
-        ))}
-
-        {displayedInventory.length === 0 && !loading && !error && (
-          <div className="text-center py-6 text-gray-500">
-            <p>No inventory items found</p>
-          </div>
-        )}
-      </div>
 
       <UpdateInventoryDialog 
         isOpen={isDialogOpen}

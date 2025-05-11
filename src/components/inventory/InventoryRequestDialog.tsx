@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Calendar, Package } from 'lucide-react';
+import { Calendar, Package, ShoppingBag } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -51,12 +51,17 @@ const InventoryRequestDialog = ({
     }, 0).toFixed(2);
   };
 
+  // Calculate total items
+  const totalItems = requestItems.reduce((total, item) => {
+    return total + item.requestQuantity;
+  }, 0);
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-coffee-green">
-            <Package size={18} />
+            <ShoppingBag size={18} />
             Confirm Inventory Request
           </DialogTitle>
           <DialogDescription>
@@ -89,9 +94,15 @@ const InventoryRequestDialog = ({
                 </div>
               </ScrollArea>
               
-              <div className="border-t border-gray-200 mt-4 pt-3 flex justify-between">
-                <span className="font-medium">Total Cost:</span>
-                <span className="font-semibold text-coffee-green">₹{calculateTotalCost()}</span>
+              <div className="border-t border-gray-200 mt-4 pt-3 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Total Items:</span>
+                  <span className="font-medium">{totalItems} items</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Total Cost:</span>
+                  <span className="font-semibold text-coffee-green">₹{calculateTotalCost()}</span>
+                </div>
               </div>
             </>
           ) : (
@@ -106,6 +117,7 @@ const InventoryRequestDialog = ({
             onClick={handleConfirmRequest}
             className="bg-coffee-green hover:bg-coffee-green/90"
           >
+            <Package size={16} className="mr-2" />
             Confirm Request
           </Button>
         </DialogFooter>
