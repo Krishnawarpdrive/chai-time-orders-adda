@@ -100,11 +100,11 @@ const InventoryItem = ({
         </div>
       </div>
 
-      {isRequestMode ? (
-        <div className="mt-3">
-          {!showQuantityInput ? (
+      <div className="mt-3">
+        {!showQuantityInput ? (
+          <div className="flex gap-2">
             <Button 
-              className="w-full bg-bisi-orange hover:bg-bisi-orange/90 flex items-center justify-center gap-1"
+              className="flex-1 bg-bisi-orange hover:bg-bisi-orange/90 flex items-center justify-center gap-1"
               variant="default"
               size="sm"
               onClick={() => setShowQuantityInput(true)}
@@ -112,76 +112,77 @@ const InventoryItem = ({
               <Plus size={16} />
               Add Inventory
             </Button>
-          ) : (
-            <>
-              <div className="flex items-center space-x-2 mb-2">
-                <span className="text-sm text-gray-600">Quantity:</span>
-                <div className="flex-1 flex items-center">
-                  <Input 
-                    type="number" 
-                    value={requestQuantity}
-                    min={1}
-                    max={maxRequestQuantity}
-                    onChange={handleQuantityChange}
-                    className="w-full px-2 py-1 text-sm"
-                  />
-                  <span className="ml-1 text-sm text-gray-600">{item.unit}</span>
-                </div>
+            {!isRequestMode && (
+              <Button 
+                className="flex-1 bg-coffee-green hover:bg-coffee-green/90"
+                variant="default"
+                size="sm"
+                onClick={() => onUpdateClick(item)}
+              >
+                Update Inventory
+              </Button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center space-x-2 mb-2">
+              <span className="text-sm text-gray-600">Quantity:</span>
+              <div className="flex-1 flex items-center">
+                <Input 
+                  type="number" 
+                  value={requestQuantity}
+                  min={1}
+                  max={maxRequestQuantity}
+                  onChange={handleQuantityChange}
+                  className="w-full px-2 py-1 text-sm"
+                />
+                <span className="ml-1 text-sm text-gray-600">{item.unit}</span>
               </div>
-              
-              <div className="flex gap-2">
-                <Button 
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setShowQuantityInput(false);
-                    setRequestError(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  className="flex-1 bg-coffee-green hover:bg-coffee-green/90 flex items-center justify-center gap-1"
-                  variant="default"
-                  size="sm"
-                  onClick={handleAddToRequest}
-                >
-                  <Check size={16} />
-                  Add to Request
-                </Button>
-              </div>
-            </>
-          )}
-          
-          {requestError && (
-            <Alert variant="destructive" className="mt-2 py-2 px-3">
-              <AlertDescription className="text-xs flex items-center">
-                <AlertCircle size={14} className="mr-1" />
-                {requestError}
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {requestSubmitted && (
-            <Alert className="mt-2 py-2 px-3 bg-green-50 border-green-200">
-              <AlertDescription className="text-xs flex items-center text-green-800">
-                <Check size={14} className="mr-1" />
-                Added to inventory request!
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
-      ) : (
-        <Button 
-          className="w-full mt-3 bg-coffee-green hover:bg-coffee-green/90"
-          variant="default"
-          size="sm"
-          onClick={() => onUpdateClick(item)}
-        >
-          Update Inventory
-        </Button>
-      )}
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowQuantityInput(false);
+                  setRequestError(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="flex-1 bg-coffee-green hover:bg-coffee-green/90 flex items-center justify-center gap-1"
+                variant="default"
+                size="sm"
+                onClick={handleAddToRequest}
+              >
+                <Check size={16} />
+                Add to Request
+              </Button>
+            </div>
+          </>
+        )}
+        
+        {requestError && (
+          <Alert variant="destructive" className="mt-2 py-2 px-3">
+            <AlertDescription className="text-xs flex items-center">
+              <AlertCircle size={14} className="mr-1" />
+              {requestError}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {requestSubmitted && (
+          <Alert className="mt-2 py-2 px-3 bg-green-50 border-green-200">
+            <AlertDescription className="text-xs flex items-center text-green-800">
+              <Check size={14} className="mr-1" />
+              Added to inventory request!
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
     </div>
   );
 };

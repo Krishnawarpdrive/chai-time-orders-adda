@@ -16,7 +16,7 @@ const ProductInventorySidebar = () => {
   const { toast } = useToast();
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [isRequestMode, setIsRequestMode] = useState<boolean>(false);
+  const [isRequestMode, setIsRequestMode] = useState<boolean>(true); // Set to true by default
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState<boolean>(false);
   const [requestItems, setRequestItems] = useState<Array<InventoryItem & { requestQuantity: number }>>([]);
 
@@ -76,10 +76,8 @@ const ProductInventorySidebar = () => {
     setIsRequestMode(false);
   };
 
-  // Filter items that are near or below reorder level when in request mode
-  const displayedInventory = isRequestMode 
-    ? inventory.filter(item => item.quantity <= item.reorder_level * 1.5)
-    : inventory;
+  // Show all items by default to make it easier to add inventory
+  const displayedInventory = inventory;
 
   // Calculate total items in request
   const totalRequestItems = requestItems.reduce((acc, item) => acc + item.requestQuantity, 0);
