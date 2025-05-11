@@ -35,6 +35,7 @@ const CustomerOrdersTable = ({
 }: CustomerOrdersTableProps) => {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [orderDetails, setOrderDetails] = useState<Record<string, any>>({});
+  const [customerHistory, setCustomerHistory] = useState<Record<string, any>>({});
   const { toast } = useToast();
   
   // Toggle row expansion
@@ -50,6 +51,33 @@ const CustomerOrdersTable = ({
           const details = await orderService.getOrderWithItems(orderId);
           if (details) {
             setOrderDetails(prev => ({ ...prev, [orderId]: details }));
+            
+            // Fetch customer history based on phone number
+            const order = orders.find(o => o.id === orderId);
+            if (order && order.phone_number && !customerHistory[order.phone_number]) {
+              try {
+                const customerOrders = await orderService.getOrders();
+                const previousOrders = customerOrders
+                  .filter(o => o.phone_number === order.phone_number && o.id !== orderId)
+                  .map(o => ({
+                    id: o.id,
+                    order_id: o.order_id,
+                    date: o.created_at,
+                    amount: o.amount
+                  }));
+                
+                setCustomerHistory(prev => ({
+                  ...prev,
+                  [order.phone_number]: {
+                    lastVisitDate: previousOrders.length > 0 ? 
+                      previousOrders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].date : null,
+                    previousOrders: previousOrders
+                  }
+                }));
+              } catch (error) {
+                console.error('Error fetching customer history:', error);
+              }
+            }
           }
         } catch (error) {
           console.error(`Error fetching details for order ${orderId}:`, error);
@@ -106,6 +134,14 @@ const CustomerOrdersTable = ({
     }
   };
 
+  // Get customer history for an order
+  const getCustomerHistoryForOrder = (order: Order) => {
+    if (!order.phone_number || !customerHistory[order.phone_number]) {
+      return { lastVisitDate: null, previousOrders: [] };
+    }
+    return customerHistory[order.phone_number];
+  };
+
   if (loading) {
     return (
       <div className="w-full flex justify-center items-center h-64">
@@ -118,29 +154,35 @@ const CustomerOrdersTable = ({
     <>
       <div className="w-full overflow-x-auto rounded-lg border border-gray-200 bg-white shadow">
         <Table>
-          <CustomerOrderTableHeader />
+          <CustomerOrderTableHeader showRating={false} />
           <TableBody>
-            {orders.map((order) => (
-              <React.Fragment key={order.id}>
-                <CustomerOrderRow 
-                  order={order}
-                  isExpanded={isRowExpanded(order.id)}
-                  toggleRowExpansion={toggleRowExpansion}
-                  formatDate={formatDate}
-                  formatAmount={formatAmount}
-                  orderDetails={orderDetails}
-                  formatItemNames={formatItemNames}
-                  getRating={getRating}
-                />
-                <CustomerOrderExpanded
-                  orderId={order.id}
-                  isExpanded={isRowExpanded(order.id)}
-                  orderDetails={orderDetails}
-                  customerName={order.customer_name}
-                  onStatusChange={handleItemStatusChange}
-                />
-              </React.Fragment>
-            ))}
+            {orders.map((order) => {
+              const { lastVisitDate, previousOrders } = getCustomerHistoryForOrder(order);
+              return (
+                <React.Fragment key={order.id}>
+                  <CustomerOrderRow 
+                    order={order}
+                    isExpanded={isRowExpanded(order.id)}
+                    toggleRowExpansion={toggleRowExpansion}
+                    formatDate={formatDate}
+                    formatAmount={formatAmount}
+                    orderDetails={orderDetails}
+                    formatItemNames={formatItemNames}
+                    getRating={getRating}
+                  />
+                  <CustomerOrderExpanded
+                    orderId={order.id}
+                    isExpanded={isRowExpanded(order.id)}
+                    orderDetails={orderDetails}
+                    customerName={order.customer_name}
+                    onStatusChange={handleItemStatusChange}
+                    getRating={getRating}
+                    lastVisitDate={lastVisitDate}
+                    previousOrders={previousOrders}
+                  />
+                </React.Fragment>
+              );
+            })}
             {orders.length === 0 && <CustomerOrderTableEmpty />}
           </TableBody>
         </Table>

@@ -14,7 +14,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import OrderItemsHover from './OrderItemsHover';
-import StarRating from './StarRating';
 
 interface CustomerOrderRowProps {
   order: Order;
@@ -71,7 +70,6 @@ const CustomerOrderRow = ({
           <span className="text-gray-400 text-sm">Loading...</span>
         )}
       </TableCell>
-      <TableCell><StarRating rating={getRating(order.id)} /></TableCell>
       <TableCell><StatusBadge status={order.status} /></TableCell>
       <TableCell className="text-right">{formatAmount(order.amount)}</TableCell>
     </TableRow>
