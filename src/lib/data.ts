@@ -168,6 +168,153 @@ export const orderData: Order[] = [
       { id: 3, name: 'Jeera Rice', quantity: 1, price: 160 },
     ]
   },
+  // Additional dummy data
+  {
+    id: 11,
+    orderId: 'ORD-011',
+    date: '2025-05-10T15:45:00',
+    customer: 'Divya Sharma',
+    customerLoyalty: 'Frequent',
+    status: 'Pending',
+    amount: 345,
+    paymentType: 'Cash',
+    items: [
+      { id: 1, name: 'Masala Chai', quantity: 3, price: 60 },
+      { id: 2, name: 'Aloo Paratha', quantity: 2, price: 150 },
+      { id: 3, name: 'Curd', quantity: 1, price: 45 },
+    ]
+  },
+  {
+    id: 12,
+    orderId: 'ORD-012',
+    date: '2025-05-10T16:15:00',
+    customer: 'Aditya Patel',
+    customerLoyalty: 'New',
+    status: 'Accepted',
+    amount: 620,
+    paymentType: 'Digital Wallet',
+    items: [
+      { id: 1, name: 'Tandoori Chicken', quantity: 1, price: 350 },
+      { id: 2, name: 'Butter Naan', quantity: 4, price: 160 },
+      { id: 3, name: 'Lassi', quantity: 2, price: 110 },
+    ]
+  },
+  {
+    id: 13,
+    orderId: 'ORD-013',
+    date: '2025-05-10T16:45:00',
+    customer: 'Suman Roy',
+    customerLoyalty: 'Periodic',
+    status: 'Preparing',
+    amount: 280,
+    paymentType: 'Credit',
+    items: [
+      { id: 1, name: 'Vegetable Pulao', quantity: 1, price: 180 },
+      { id: 2, name: 'Raita', quantity: 1, price: 50 },
+      { id: 3, name: 'Papad', quantity: 2, price: 50 },
+    ]
+  },
+  {
+    id: 14,
+    orderId: 'ORD-014',
+    date: '2025-05-10T17:30:00',
+    customer: 'Prakash Joshi',
+    customerLoyalty: 'Frequent',
+    status: 'Ready To Pick',
+    amount: 410,
+    paymentType: 'Cash',
+    items: [
+      { id: 1, name: 'Chicken Biryani', quantity: 1, price: 240 },
+      { id: 2, name: 'Raita', quantity: 1, price: 50 },
+      { id: 3, name: 'Coca Cola', quantity: 2, price: 120 },
+    ]
+  },
+  {
+    id: 15,
+    orderId: 'ORD-015',
+    date: '2025-05-10T18:00:00',
+    customer: 'Neha Gupta',
+    customerLoyalty: 'Periodic',
+    status: 'Picked',
+    amount: 330,
+    paymentType: 'Digital Wallet',
+    items: [
+      { id: 1, name: 'Veg Hakka Noodles', quantity: 1, price: 180 },
+      { id: 2, name: 'Veg Manchurian', quantity: 1, price: 150 },
+    ]
+  },
+  {
+    id: 16,
+    orderId: 'ORD-016',
+    date: '2025-05-10T18:30:00',
+    customer: 'Arjun Mehra',
+    customerLoyalty: 'New',
+    status: 'Completed',
+    amount: 540,
+    paymentType: 'Credit',
+    items: [
+      { id: 1, name: 'Kadhai Paneer', quantity: 1, price: 220 },
+      { id: 2, name: 'Butter Naan', quantity: 3, price: 120 },
+      { id: 3, name: 'Gulab Jamun', quantity: 4, price: 200 },
+    ]
+  },
+  {
+    id: 17,
+    orderId: 'ORD-017',
+    date: '2025-05-10T19:00:00',
+    customer: 'Kavita Deshmukh',
+    customerLoyalty: 'Frequent',
+    status: 'Pending',
+    amount: 380,
+    paymentType: 'Cash',
+    items: [
+      { id: 1, name: 'Masala Dosa', quantity: 2, price: 240 },
+      { id: 2, name: 'Filter Coffee', quantity: 2, price: 80 },
+      { id: 3, name: 'Vada', quantity: 1, price: 60 },
+    ]
+  },
+  {
+    id: 18,
+    orderId: 'ORD-018',
+    date: '2025-05-10T19:30:00',
+    customer: 'Rajat Kapoor',
+    customerLoyalty: 'Periodic',
+    status: 'Accepted',
+    amount: 290,
+    paymentType: 'Digital Wallet',
+    items: [
+      { id: 1, name: 'Paneer Roll', quantity: 2, price: 180 },
+      { id: 2, name: 'Cold Coffee', quantity: 2, price: 110 },
+    ]
+  },
+  {
+    id: 19,
+    orderId: 'ORD-019',
+    date: '2025-05-10T20:00:00',
+    customer: 'Alok Nath',
+    customerLoyalty: 'Frequent',
+    status: 'Preparing',
+    amount: 650,
+    paymentType: 'Credit',
+    items: [
+      { id: 1, name: 'Family Dinner Thali', quantity: 2, price: 550 },
+      { id: 2, name: 'Sweet Lassi', quantity: 2, price: 100 },
+    ]
+  },
+  {
+    id: 20,
+    orderId: 'ORD-020',
+    date: '2025-05-10T20:30:00',
+    customer: 'Shweta Tiwari',
+    customerLoyalty: 'New',
+    status: 'Cancelled',
+    amount: 420,
+    paymentType: 'Cash',
+    items: [
+      { id: 1, name: 'Cheese Pizza', quantity: 1, price: 320 },
+      { id: 2, name: 'Garlic Bread', quantity: 1, price: 100 },
+    ]
+  }
 ];
 
 export const filterOptions = [

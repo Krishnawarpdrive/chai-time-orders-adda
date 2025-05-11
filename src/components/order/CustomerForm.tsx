@@ -49,25 +49,27 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
           const existingCustomer = await orderService.getCustomerByPhone(phoneNumber);
           
           if (existingCustomer) {
-            setCustomerName(existingCustomer.name);
+            // Only set the customer name if the input is currently empty
+            // This prevents overwriting what the user has already typed
+            if (!customerName.trim()) {
+              setCustomerName(existingCustomer.name);
+            }
+            
             if (existingCustomer.dob) {
               setDob(existingCustomer.dob);
               setDate(new Date(existingCustomer.dob));
             }
+            
             setCustomerBadge(existingCustomer.badge as 'New' | 'Frequent' | 'Periodic');
             
             toast({
               title: "Existing Customer Found",
               description: `Welcome back, ${existingCustomer.name}!`,
             });
-          } else {
-            // Reset fields if no match found and fields are populated
-            if (customerName) {
-              setCustomerName('');
-              setDob('');
-              setDate(undefined);
-              setCustomerBadge('New');
-            }
+          } 
+          // Only reset the fields if the customer name wasn't manually entered
+          else if (!customerName.trim()) {
+            setCustomerBadge('New');
           }
         } catch (error) {
           console.error("Error checking customer:", error);

@@ -23,6 +23,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { 
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { format, parseISO, isValid } from 'date-fns';
 
 interface CustomerOrdersTableProps {
   orders: Order[];
@@ -134,6 +140,22 @@ const CustomerOrdersTable = ({
     }
   };
 
+  // Format item names for display
+  const formatItemNames = (items: any[]) => {
+    if (!items || items.length === 0) return 'No items';
+    
+    // Get first two item names
+    const firstTwoItems = items
+      .slice(0, 2)
+      .map(item => `${item.quantity}x ${item.item?.name || 'Unknown Item'}`)
+      .join(', ');
+    
+    // Add ellipsis if there are more items
+    return items.length > 2 
+      ? `${firstTwoItems}...` 
+      : firstTwoItems;
+  };
+
   if (loading) {
     return (
       <div className="w-full flex justify-center items-center h-64">
@@ -151,6 +173,8 @@ const CustomerOrdersTable = ({
               <TableHead className="w-[50px]"></TableHead>
               <TableHead>Order ID</TableHead>
               <TableHead>Customer Name</TableHead>
+              <TableHead>Last Visit</TableHead>
+              <TableHead>Last Order</TableHead>
               <TableHead>Order Status</TableHead>
               <TableHead className="text-right">Amount</TableHead>
             </TableRow>
@@ -180,11 +204,37 @@ const CustomerOrdersTable = ({
                     </div>
                   </TableCell>
                   <TableCell>{order.customer_name}</TableCell>
+                  <TableCell>{formatDate(order.created_at)}</TableCell>
+                  <TableCell>
+                    {orderDetails[order.id] ? (
+                      <HoverCard>
+                        <HoverCardTrigger asChild>
+                          <span className="cursor-pointer text-sm truncate block max-w-[150px]">
+                            {formatItemNames(orderDetails[order.id].items)}
+                          </span>
+                        </HoverCardTrigger>
+                        <HoverCardContent className="w-80 p-2">
+                          <div className="space-y-1">
+                            <h4 className="text-sm font-semibold">Order Items:</h4>
+                            <ul className="text-sm">
+                              {orderDetails[order.id].items.map((item: any, index: number) => (
+                                <li key={index} className="py-1 border-b border-gray-100 last:border-0">
+                                  {item.quantity}x {item.item?.name || 'Unknown Item'}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
+                    ) : (
+                      <span className="text-gray-400 text-sm">Loading...</span>
+                    )}
+                  </TableCell>
                   <TableCell><StatusBadge status={order.status} /></TableCell>
                   <TableCell className="text-right">{formatAmount(order.amount)}</TableCell>
                 </TableRow>
                 <TableRow className={cn(isRowExpanded(order.id) ? "" : "hidden")}>
-                  <TableCell colSpan={5} className="p-0">
+                  <TableCell colSpan={7} className="p-0">
                     <Collapsible open={isRowExpanded(order.id)}>
                       <CollapsibleContent>
                         <div className="px-4 py-2 bg-milk-sugar/10">
@@ -210,7 +260,7 @@ const CustomerOrdersTable = ({
             ))}
             {orders.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
+                <TableCell colSpan={7} className="text-center py-8">
                   <p className="text-gray-500">No orders found</p>
                 </TableCell>
               </TableRow>
