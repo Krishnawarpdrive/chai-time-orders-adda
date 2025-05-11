@@ -4,16 +4,16 @@ import { Coffee, Cookie, Leaf } from 'lucide-react';
 import React from 'react';
 
 // Get the appropriate icon based on item category
-export const getItemIcon = (category: string) => {
+export const getItemIcon = (category: string): React.ReactNode => {
   switch (category) {
     case 'coffee':
-      return <Coffee className="w-5 h-5 text-coffee-green" />;
+      return React.createElement(Coffee, { className: "w-5 h-5 text-coffee-green" });
     case 'tea':
-      return <Leaf className="w-5 h-5 text-coffee-green" />;
+      return React.createElement(Leaf, { className: "w-5 h-5 text-coffee-green" });
     case 'snack':
-      return <Cookie className="w-5 h-5 text-bisi-orange" />;
+      return React.createElement(Cookie, { className: "w-5 h-5 text-bisi-orange" });
     default:
-      return <Coffee className="w-5 h-5 text-coffee-green" />;
+      return React.createElement(Coffee, { className: "w-5 h-5 text-coffee-green" });
   }
 };
 
