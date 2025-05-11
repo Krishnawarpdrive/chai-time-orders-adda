@@ -69,20 +69,23 @@ const CustomerMobileMenu: React.FC<CustomerMobileMenuProps> = ({
 
       <div className="border-t border-white/20 p-4">
         <p className="text-sm text-white/70 mb-2">Switch Persona:</p>
-        {personas.map((persona) => (
-          <button
-            key={persona.value}
-            onClick={() => handlePersonaChange(persona.value)}
-            className={`flex items-center w-full p-2 rounded-md ${
-              selectedPersona === persona.value 
-                ? 'bg-[#e9c766] text-[#1e483c]' 
-                : 'text-white/80 hover:bg-[#1e483c]/60'
-            }`}
-          >
-            <persona.icon className="mr-3 h-5 w-5" />
-            <span>{persona.label}</span>
-          </button>
-        ))}
+        {personas.map((persona) => {
+          const PersonaIcon = persona.icon;
+          return (
+            <button
+              key={persona.value}
+              onClick={() => handlePersonaChange(persona.value)}
+              className={`flex items-center w-full p-2 rounded-md ${
+                selectedPersona === persona.value 
+                  ? 'bg-[#e9c766] text-[#1e483c]' 
+                  : 'text-white/80 hover:bg-[#1e483c]/60'
+              }`}
+            >
+              <PersonaIcon className="mr-3 h-5 w-5" />
+              <span>{persona.label}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

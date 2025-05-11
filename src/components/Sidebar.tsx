@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Menu as MenuIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import SidebarPersonaSelector from './sidebar/SidebarPersonaSelector';
+import SidebarPersonaSelector, { personas } from './sidebar/SidebarPersonaSelector';
 import SidebarNavItems from './sidebar/SidebarNavItems';
 import CustomerMobileMenu from './sidebar/CustomerMobileMenu';
 import { getActiveNavItems } from './sidebar/navItems';
@@ -60,6 +60,10 @@ export function Sidebar({ className }: SidebarProps) {
       />
     );
   }
+
+  // Find the current persona icon
+  const currentPersona = personas.find(p => p.value === selectedPersona);
+  const PersonaIcon = currentPersona ? currentPersona.icon : null;
 
   return (
     <aside 

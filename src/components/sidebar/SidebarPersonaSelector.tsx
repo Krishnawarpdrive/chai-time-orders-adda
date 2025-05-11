@@ -35,6 +35,10 @@ const SidebarPersonaSelector: React.FC<SidebarPersonaSelectorProps> = ({
   isMobile, 
   handlePersonaChange 
 }) => {
+  // Get the current persona icon
+  const currentPersona = personas.find(p => p.value === selectedPersona);
+  const PersonaIcon = currentPersona ? currentPersona.icon : User;
+
   // Expanded view (desktop)
   if (!collapsed && !isMobile) {
     return (
@@ -48,14 +52,17 @@ const SidebarPersonaSelector: React.FC<SidebarPersonaSelectorProps> = ({
             <SelectValue placeholder="Select Persona" />
           </SelectTrigger>
           <SelectContent className="bg-coffee-green border-coffee-green/30">
-            {personas.map((persona) => (
-              <SelectItem key={persona.value} value={persona.value} className="text-white focus:bg-coffee-green/70 focus:text-white">
-                <div className="flex items-center gap-2">
-                  <persona.icon className="h-4 w-4" />
-                  <span>{persona.label}</span>
-                </div>
-              </SelectItem>
-            ))}
+            {personas.map((persona) => {
+              const PersonaIconItem = persona.icon;
+              return (
+                <SelectItem key={persona.value} value={persona.value} className="text-white focus:bg-coffee-green/70 focus:text-white">
+                  <div className="flex items-center gap-2">
+                    <PersonaIconItem className="h-4 w-4" />
+                    <span>{persona.label}</span>
+                  </div>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>
@@ -66,19 +73,22 @@ const SidebarPersonaSelector: React.FC<SidebarPersonaSelectorProps> = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="mt-4 w-8 h-8 flex items-center justify-center bg-coffee-green/50 rounded hover:bg-coffee-green/70 transition-colors">
-        {personas.find(p => p.value === selectedPersona)?.icon({ size: 16 }) || <User size={16} />}
+        <PersonaIcon size={16} />
       </DropdownMenuTrigger>
       <DropdownMenuContent side="right" className="bg-coffee-green border-coffee-green/30 text-white">
-        {personas.map((persona) => (
-          <DropdownMenuItem 
-            key={persona.value}
-            onClick={() => handlePersonaChange(persona.value)}
-            className="cursor-pointer hover:bg-coffee-green/70 text-white focus:bg-coffee-green/70 focus:text-white"
-          >
-            <persona.icon className="mr-2 h-4 w-4" />
-            <span>{persona.label}</span>
-          </DropdownMenuItem>
-        ))}
+        {personas.map((persona) => {
+          const PersonaIconItem = persona.icon;
+          return (
+            <DropdownMenuItem 
+              key={persona.value}
+              onClick={() => handlePersonaChange(persona.value)}
+              className="cursor-pointer hover:bg-coffee-green/70 text-white focus:bg-coffee-green/70 focus:text-white"
+            >
+              <PersonaIconItem className="mr-2 h-4 w-4" />
+              <span>{persona.label}</span>
+            </DropdownMenuItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );
