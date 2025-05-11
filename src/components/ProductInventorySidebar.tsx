@@ -5,6 +5,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { useInventory, type InventoryItem } from "@/hooks/useInventory";
 import InventoryItemCard from "@/components/inventory/InventoryItem";
+import InventoryCardRequest from "@/components/inventory/InventoryCardRequest";
 import UpdateInventoryDialog from "@/components/inventory/UpdateInventoryDialog";
 import InventoryRequestDialog from "@/components/inventory/InventoryRequestDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -141,13 +142,19 @@ const ProductInventorySidebar = () => {
 
       <div className="space-y-4">
         {displayedInventory.map((item) => (
-          <InventoryItemCard 
-            key={item.id}
-            item={item}
-            onUpdateClick={handleUpdateInventory}
-            isRequestMode={isRequestMode}
-            onAddToRequest={handleAddToRequest}
-          />
+          <div key={item.id} className="space-y-2">
+            <InventoryItemCard 
+              item={item}
+              onUpdateClick={handleUpdateInventory}
+              isRequestMode={isRequestMode}
+              onAddToRequest={handleAddToRequest}
+            />
+            <InventoryCardRequest
+              item={item}
+              isRequestMode={isRequestMode}
+              onAddToRequest={handleAddToRequest}
+            />
+          </div>
         ))}
 
         {displayedInventory.length === 0 && !loading && !error && (

@@ -18,7 +18,7 @@ interface InventoryRequestItem extends InventoryItem {
   requestQuantity: number;
 }
 
-interface InventoryRequestDialogProps {
+export interface InventoryRequestDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   requestItems: InventoryRequestItem[];
