@@ -3,9 +3,17 @@ import React, { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { Search } from 'lucide-react';
+import { Search, CalendarIcon } from 'lucide-react';
 import { orderService } from '@/services/orderService';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 
 interface CustomerFormProps {
   customerName: string;
@@ -29,6 +37,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
   setCustomerBadge
 }) => {
   const { toast } = useToast();
+  const [date, setDate] = React.useState<Date | undefined>(
+    dob ? new Date(dob) : undefined
+  );
 
   // Check if customer exists when phone number changes
   useEffect(() => {
@@ -39,7 +50,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
           
           if (existingCustomer) {
             setCustomerName(existingCustomer.name);
-            setDob(existingCustomer.dob || '');
+            if (existingCustomer.dob) {
+              setDob(existingCustomer.dob);
+              setDate(new Date(existingCustomer.dob));
+            }
             setCustomerBadge(existingCustomer.badge as 'New' | 'Frequent' | 'Periodic');
             
             toast({
@@ -51,6 +65,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
             if (customerName) {
               setCustomerName('');
               setDob('');
+              setDate(undefined);
               setCustomerBadge('New');
             }
           }
@@ -62,6 +77,16 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
     
     checkCustomer();
   }, [phoneNumber, toast, customerName, setCustomerName, setDob, setCustomerBadge]);
+
+  // Handle date change
+  const handleDateChange = (selectedDate: Date | undefined) => {
+    setDate(selectedDate);
+    if (selectedDate) {
+      setDob(format(selectedDate, 'yyyy-MM-dd'));
+    } else {
+      setDob('');
+    }
+  };
 
   return (
     <div className="bg-milk-sugar p-6 border-b">
@@ -106,12 +131,30 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
         </div>
         <div className="space-y-2">
           <Label htmlFor="dob">Date of Birth</Label>
-          <Input 
-            id="dob" 
-            value={dob}
-            onChange={(e) => setDob(e.target.value)}
-            placeholder="DD MMM YYYY"
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="dob"
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "dd MMM yyyy") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={handleDateChange}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
     </div>
