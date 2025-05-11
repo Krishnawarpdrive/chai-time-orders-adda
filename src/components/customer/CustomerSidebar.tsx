@@ -2,18 +2,13 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { 
-  Users, 
-  Package, 
-  Tag, 
-  Percent, 
   ClipboardList, 
+  Coffee,
+  User,
+  LogOut,
   ChevronLeft, 
   ChevronRight,
-  BarChart,
-  Users as StaffIcon,
-  MapPin,
-  DatabaseIcon,
-  LogOut
+  ShoppingBag
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,58 +24,32 @@ interface NavItem {
   badge?: number;
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function CustomerSidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { userRole, signOut } = useAuth();
+  const { signOut } = useAuth();
   
   const navItems: NavItem[] = [
     { 
-      title: 'Orders', 
+      title: 'Dashboard', 
+      icon: ShoppingBag, 
+      path: '/customer/dashboard'
+    },
+    { 
+      title: 'My Orders', 
       icon: ClipboardList, 
-      path: '/',
-      badge: 5
+      path: '/customer/orders'
     },
     { 
-      title: 'Inventory', 
-      icon: DatabaseIcon, 
-      path: '/inventory'
+      title: 'Menu', 
+      icon: Coffee, 
+      path: '/customer/menu'
     },
     { 
-      title: 'Customers', 
-      icon: Users, 
-      path: '/customers'
-    },
-    { 
-      title: 'Staff', 
-      icon: StaffIcon, 
-      path: '/staff'
-    },
-    { 
-      title: 'Outlets', 
-      icon: MapPin, 
-      path: '/outlets'
-    },
-    { 
-      title: 'Products', 
-      icon: Package, 
-      path: '/products'
-    },
-    { 
-      title: 'Categories', 
-      icon: Tag, 
-      path: '/categories'
-    },
-    { 
-      title: 'Offers', 
-      icon: Percent, 
-      path: '/offers'
-    },
-    { 
-      title: 'Reports', 
-      icon: BarChart, 
-      path: '/reports'
-    },
+      title: 'Profile', 
+      icon: User, 
+      path: '/customer/profile'
+    }
   ];
 
   return (
@@ -137,33 +106,30 @@ export function Sidebar({ className }: SidebarProps) {
                     {item.badge}
                   </span>
                 )}
-                {collapsed && item.badge && (
-                  <span className="absolute top-0 right-0 bg-white text-coffee-green text-xs font-semibold rounded-full px-1 py-0">
-                    {item.badge}
-                  </span>
-                )}
               </NavLink>
             </li>
           ))}
+          
+          {/* Logout button */}
+          <li className="mt-8">
+            <button
+              onClick={signOut}
+              className="flex items-center py-3 px-3 rounded-md transition-colors text-white/80 hover:bg-red-500/70 hover:text-white w-full"
+            >
+              <LogOut size={20} className={cn('flex-shrink-0', collapsed ? 'mx-auto' : 'mr-3')} />
+              {!collapsed && (
+                <span className="flex-1 truncate">Logout</span>
+              )}
+            </button>
+          </li>
         </ul>
       </nav>
 
-      {/* Logout Button */}
-      <div className="p-2 mt-auto">
-        <button
-          onClick={signOut}
-          className="flex items-center py-3 px-3 rounded-md transition-colors text-white/80 hover:bg-red-500/70 hover:text-white w-full"
-        >
-          <LogOut size={20} className={cn('flex-shrink-0', collapsed ? 'mx-auto' : 'mr-3')} />
-          {!collapsed && (
-            <span className="flex-1 truncate">Logout</span>
-          )}
-        </button>
-
+      {/* Bottom section */}
+      <div className="p-4 mt-auto">
         {!collapsed && (
-          <div className="text-white/70 text-xs text-center mt-4">
-            <p>ಸ್ವಾಗತ!</p>
-            <p>Welcome, {userRole === 'admin' ? 'Admin' : 'Staff'}</p>
+          <div className="text-white/70 text-xs text-center">
+            <p>Welcome, Customer</p>
           </div>
         )}
       </div>
@@ -171,4 +137,4 @@ export function Sidebar({ className }: SidebarProps) {
   );
 };
 
-export default Sidebar;
+export default CustomerSidebar;
