@@ -63,6 +63,7 @@ export function Sidebar({ className }: SidebarProps) {
 
   // Find the current persona icon
   const currentPersona = personas.find(p => p.value === selectedPersona);
+  // Important: Don't use as a function, use as a component
   const PersonaIcon = currentPersona ? currentPersona.icon : null;
 
   return (

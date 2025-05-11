@@ -38,25 +38,28 @@ const CustomerMobileMenu: React.FC<CustomerMobileMenuProps> = ({
 
       <div className="flex-1 overflow-auto">
         <ul className="py-4">
-          {navItems.map((item) => (
-            <li key={item.title} className="px-4 py-3">
-              <NavLink
-                to={item.path}
-                onClick={onClose}
-                className={({ isActive }) => 
-                  `flex items-center text-xl ${isActive ? 'text-[#e9c766]' : 'text-white'}`
-                }
-              >
-                <item.icon className="mr-4 h-6 w-6" />
-                <span>{item.title}</span>
-                {item.badge && (
-                  <span className="ml-auto bg-[#e46546] text-white text-xs px-2 py-1 rounded-full">
-                    {item.badge}
-                  </span>
-                )}
-              </NavLink>
-            </li>
-          ))}
+          {navItems.map((item) => {
+            const ItemIcon = item.icon;
+            return (
+              <li key={item.title} className="px-4 py-3">
+                <NavLink
+                  to={item.path}
+                  onClick={onClose}
+                  className={({ isActive }) => 
+                    `flex items-center text-xl ${isActive ? 'text-[#e9c766]' : 'text-white'}`
+                  }
+                >
+                  <ItemIcon className="mr-4 h-6 w-6" />
+                  <span>{item.title}</span>
+                  {item.badge && (
+                    <span className="ml-auto bg-[#e46546] text-white text-xs px-2 py-1 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                </NavLink>
+              </li>
+            );
+          })}
 
           <li className="px-4 py-3">
             <button className="flex items-center text-xl text-white w-full">
