@@ -12,11 +12,9 @@ import {
   BarChart,
   Users as StaffIcon,
   MapPin,
-  DatabaseIcon,
-  LogOut
+  DatabaseIcon
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface SidebarProps {
   className?: string;
@@ -32,8 +30,8 @@ interface NavItem {
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { userRole, signOut } = useAuth();
-  
+  const currentPath = location.pathname;
+
   const navItems: NavItem[] = [
     { 
       title: 'Orders', 
@@ -148,22 +146,12 @@ export function Sidebar({ className }: SidebarProps) {
         </ul>
       </nav>
 
-      {/* Logout Button */}
-      <div className="p-2 mt-auto">
-        <button
-          onClick={signOut}
-          className="flex items-center py-3 px-3 rounded-md transition-colors text-white/80 hover:bg-red-500/70 hover:text-white w-full"
-        >
-          <LogOut size={20} className={cn('flex-shrink-0', collapsed ? 'mx-auto' : 'mr-3')} />
-          {!collapsed && (
-            <span className="flex-1 truncate">Logout</span>
-          )}
-        </button>
-
+      {/* Bottom section */}
+      <div className="p-4 mt-auto">
         {!collapsed && (
-          <div className="text-white/70 text-xs text-center mt-4">
+          <div className="text-white/70 text-xs text-center">
             <p>ಸ್ವಾಗತ!</p>
-            <p>Welcome, {userRole === 'admin' ? 'Admin' : 'Staff'}</p>
+            <p>Welcome, Admin</p>
           </div>
         )}
       </div>
