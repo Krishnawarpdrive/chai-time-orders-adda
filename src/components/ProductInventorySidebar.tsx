@@ -7,6 +7,7 @@ import InventoryRequestDialog from "@/components/inventory/InventoryRequestDialo
 import SidebarHeader from "@/components/inventory/SidebarHeader";
 import InventoryList from "@/components/inventory/InventoryList";
 import RequestFooter from "@/components/inventory/RequestFooter";
+import { format, addBusinessDays } from 'date-fns';
 
 const ProductInventorySidebar = () => {
   const { inventory, loading, error, updateInventoryItem } = useInventory();
@@ -16,6 +17,9 @@ const ProductInventorySidebar = () => {
   const [isRequestMode, setIsRequestMode] = useState<boolean>(true);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState<boolean>(false);
   const [requestItems, setRequestItems] = useState<Array<InventoryItem & { requestQuantity: number }>>([]);
+
+  // Calculate estimated delivery date (2 business days from now)
+  const estimatedDeliveryDate = addBusinessDays(new Date(), 2);
 
   const handleUpdateInventory = (item: InventoryItem) => {
     setSelectedItem(item);
@@ -111,7 +115,7 @@ const ProductInventorySidebar = () => {
         onOpenChange={setIsRequestDialogOpen}
         requestItems={requestItems}
         onClearRequest={clearRequest}
-        estimatedDeliveryDate={new Date()}
+        estimatedDeliveryDate={estimatedDeliveryDate.toISOString()} // Fix: Convert Date to string
       />
     </div>
   );
