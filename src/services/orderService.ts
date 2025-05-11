@@ -36,7 +36,7 @@ export const orderService = {
   async createCustomer(customer: Partial<Customer>): Promise<Customer | null> {
     const { data, error } = await supabase
       .from('customers')
-      .insert([customer])
+      .insert(customer) // Fix: Removed the array brackets
       .select()
       .single();
       
@@ -93,7 +93,7 @@ export const orderService = {
     // Start a transaction
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
-      .insert([order])
+      .insert(order) // Fix: Removed the array brackets
       .select()
       .single();
       
@@ -105,7 +105,8 @@ export const orderService = {
     // Add items to the order
     const orderItemsWithId = orderItems.map(item => ({
       ...item,
-      order_id: orderData.id
+      order_id: orderData.id,
+      quantity: item.quantity || 1 // Fix: Ensure quantity is set
     }));
     
     const { data: itemsData, error: itemsError } = await supabase
@@ -153,7 +154,7 @@ export const orderService = {
     for (const item of menuItems) {
       const { data: orderItems, error: itemsError } = await supabase
         .from('order_items')
-        .select('*, order:order_id(customer_name)')
+        .select('*, order:order_id(order_id, id, customer_name)')
         .eq('item_id', item.id);
         
       if (itemsError) {

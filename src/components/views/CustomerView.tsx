@@ -5,6 +5,7 @@ import OrdersSearchFilter from '@/components/table/OrdersSearchFilter';
 import { orderService } from '@/services/orderService';
 import { useToast } from '@/hooks/use-toast';
 import { Order } from '@/types/supabase';
+import { supabase } from "@/integrations/supabase/client";
 
 export const CustomerView = () => {
   const [orders, setOrders] = useState<Order[]>([]);
