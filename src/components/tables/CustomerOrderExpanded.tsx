@@ -17,9 +17,6 @@ import { formatDate } from './customerOrdersUtils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { List } from 'lucide-react';
 
 interface CustomerOrderExpandedProps {
   orderId: string;
@@ -42,7 +39,7 @@ const CustomerOrderExpanded = ({
   lastVisitDate,
   previousOrders = []
 }: CustomerOrderExpandedProps) => {
-  const [showOrdersDialog, setShowOrdersDialog] = useState(false);
+  const [showAllOrders, setShowAllOrders] = useState(false);
   
   return (
     <TableRow className={cn(isExpanded ? "" : "hidden")}>
@@ -83,51 +80,47 @@ const CustomerOrderExpanded = ({
                         </div>
                       )}
                       
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between">
                         <span className="text-gray-600">Previous Orders:</span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-coffee-green hover:text-coffee-green/80 p-1 h-auto flex items-center gap-1"
-                          onClick={() => setShowOrdersDialog(true)}
-                        >
-                          <span className="font-medium">{previousOrders.length}</span>
-                          <List className="h-4 w-4" />
-                        </Button>
+                        <span className="font-medium">{previousOrders.length}</span>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+                
+                {previousOrders.length > 0 && (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <Accordion type="single" collapsible>
+                        <AccordionItem value="previous-orders">
+                          <AccordionTrigger className="text-coffee-green">
+                            Previous Orders ({previousOrders.length})
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <ScrollArea className="h-[180px] w-full">
+                              <div className="space-y-2">
+                                {previousOrders.map((order) => (
+                                  <div 
+                                    key={order.id} 
+                                    className="flex justify-between border-b border-gray-100 pb-2"
+                                  >
+                                    <div>
+                                      <div className="font-medium text-sm">{order.order_id}</div>
+                                      <div className="text-xs text-gray-500">{formatDate(order.date)}</div>
+                                    </div>
+                                    <div className="font-medium">₹{order.amount.toFixed(2)}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
-            
-            <Dialog open={showOrdersDialog} onOpenChange={setShowOrdersDialog}>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Previous Orders for {customerName}</DialogTitle>
-                </DialogHeader>
-                <ScrollArea className="h-[340px] w-full">
-                  <div className="space-y-3 p-1">
-                    {previousOrders.length > 0 ? (
-                      previousOrders.map((order) => (
-                        <div 
-                          key={order.id} 
-                          className="flex justify-between p-3 border border-gray-100 rounded-md hover:bg-gray-50"
-                        >
-                          <div>
-                            <div className="font-medium">{order.order_id}</div>
-                            <div className="text-sm text-gray-500">{formatDate(order.date)}</div>
-                          </div>
-                          <div className="font-medium text-coffee-green">₹{order.amount.toFixed(2)}</div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">No previous orders found</div>
-                    )}
-                  </div>
-                </ScrollArea>
-              </DialogContent>
-            </Dialog>
           </CollapsibleContent>
         </Collapsible>
       </TableCell>
