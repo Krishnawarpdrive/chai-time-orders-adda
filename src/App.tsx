@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/index";
+import Home from "./pages/Index"; // Corrected import - using the correct casing
 import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
 
