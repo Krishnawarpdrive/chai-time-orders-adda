@@ -6,6 +6,7 @@ import { orderService } from '@/services/orderService';
 import { useToast } from '@/hooks/use-toast';
 import { Order } from '@/types/supabase';
 import { supabase } from "@/integrations/supabase/client";
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 export const CustomerView = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -69,11 +70,23 @@ export const CustomerView = () => {
     return matchesSearch && matchesFilter;
   });
 
+  // Check for completed orders (all items delivered)
+  const completedOrders = filteredOrders.filter(order => 
+    order.status === 'Completed' || 
+    (order.items && order.items.every(item => item.status === 'Ready for Hand Over'))
+  );
+
+  // Active orders
+  const activeOrders = filteredOrders.filter(order => 
+    order.status !== 'Completed' && 
+    (!order.items || !order.items.every(item => item.status === 'Ready for Hand Over'))
+  );
+
   // Pagination
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
-  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  const currentOrders = activeOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const totalPages = Math.ceil(activeOrders.length / ordersPerPage);
 
   // Reset orders
   const resetOrders = async () => {
@@ -98,25 +111,38 @@ export const CustomerView = () => {
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-160px)] flex flex-col">
-      <OrdersSearchFilter 
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        filterValue={filterValue}
-        setFilterValue={setFilterValue}
-        resetOrders={resetOrders}
-      />
+    <TooltipProvider>
+      <div className="w-full min-h-[calc(100vh-160px)] flex flex-col">
+        <OrdersSearchFilter 
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          filterValue={filterValue}
+          setFilterValue={setFilterValue}
+          resetOrders={resetOrders}
+        />
 
-      <CustomerOrdersTable 
-        orders={currentOrders}
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        totalPages={totalPages}
-        indexOfFirstOrder={indexOfFirstOrder}
-        indexOfLastOrder={indexOfLastOrder}
-        totalOrders={filteredOrders.length}
-        loading={loading}
-      />
-    </div>
+        {completedOrders.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-medium text-coffee-green mb-2">Completed Orders ({completedOrders.length})</h3>
+            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-green-800">
+                {completedOrders.length} order(s) have been completed and delivered to customers.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <CustomerOrdersTable 
+          orders={currentOrders}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalPages={totalPages}
+          indexOfFirstOrder={indexOfFirstOrder}
+          indexOfLastOrder={indexOfLastOrder}
+          totalOrders={activeOrders.length}
+          loading={loading}
+        />
+      </div>
+    </TooltipProvider>
   );
 };

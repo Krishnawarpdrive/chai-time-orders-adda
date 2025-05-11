@@ -30,17 +30,23 @@ export function OrderActions({ orderId, status, onStatusChange }: OrderActionsPr
           <div className="flex space-x-2">
             <button 
               onClick={() => handleAction('Accepted')} 
-              className={cn('action-button bg-coffee-green text-white hover:bg-coffee-green/90')}
+              className={cn('action-button bg-coffee-green text-white hover:bg-coffee-green/90 flex items-center px-4 py-2 rounded')}
             >
-              <Check className="w-4 h-4 mr-1 inline" />
-              Accept
+              <Check className="w-5 h-5 mr-3" />
+              <div className="flex flex-col">
+                <span>Accept</span>
+                <span>Order</span>
+              </div>
             </button>
             <button 
               onClick={() => handleAction('Cancelled')} 
-              className={cn('action-button bg-red-500 text-white hover:bg-red-600')}
+              className={cn('action-button bg-red-500 text-white hover:bg-red-600 flex items-center px-4 py-2 rounded')}
             >
-              <X className="w-4 h-4 mr-1 inline" />
-              Cancel
+              <X className="w-5 h-5 mr-3" />
+              <div className="flex flex-col">
+                <span>Cancel</span>
+                <span>Order</span>
+              </div>
             </button>
           </div>
         );
@@ -48,40 +54,52 @@ export function OrderActions({ orderId, status, onStatusChange }: OrderActionsPr
         return (
           <button 
             onClick={() => handleAction('Preparing')} 
-            className={cn('action-button bg-coffee-green text-white hover:bg-coffee-green/90')}
+            className={cn('action-button bg-coffee-green text-white hover:bg-coffee-green/90 flex items-center px-4 py-2 rounded')}
           >
-            <Loader className="w-4 h-4 mr-1 inline" />
-            Preparing
+            <Loader className="w-5 h-5 mr-3" />
+            <div className="flex flex-col">
+              <span>Start</span>
+              <span>Making</span>
+            </div>
           </button>
         );
       case 'Preparing':
         return (
           <button 
             onClick={() => handleAction('Ready To Pick')} 
-            className={cn('action-button bg-bisi-orange text-white hover:bg-bisi-orange/90')}
+            className={cn('action-button bg-bisi-orange text-white hover:bg-bisi-orange/90 flex items-center px-4 py-2 rounded')}
           >
-            <PackageCheck className="w-4 h-4 mr-1 inline" />
-            Ready To Pick
+            <PackageCheck className="w-5 h-5 mr-3" />
+            <div className="flex flex-col">
+              <span>Order</span>
+              <span>Prepared</span>
+            </div>
           </button>
         );
       case 'Ready To Pick':
         return (
           <button 
             onClick={() => handleAction('Picked')} 
-            className={cn('action-button bg-bisi-orange text-white hover:bg-bisi-orange/90')}
+            className={cn('action-button bg-bisi-orange text-white hover:bg-bisi-orange/90 flex items-center px-4 py-2 rounded')}
           >
-            <Package className="w-4 h-4 mr-1 inline" />
-            Picked
+            <Package className="w-5 h-5 mr-3" />
+            <div className="flex flex-col">
+              <span>Order</span>
+              <span>Delivered</span>
+            </div>
           </button>
         );
       case 'Picked':
         return (
           <button 
             onClick={() => handleAction('Completed')} 
-            className={cn('action-button bg-coffee-green text-white hover:bg-coffee-green/90')}
+            className={cn('action-button bg-coffee-green text-white hover:bg-coffee-green/90 flex items-center px-4 py-2 rounded')}
           >
-            <Check className="w-4 h-4 mr-1 inline" />
-            Complete
+            <Check className="w-5 h-5 mr-3" />
+            <div className="flex flex-col">
+              <span>Complete</span>
+              <span>Order</span>
+            </div>
           </button>
         );
       default:

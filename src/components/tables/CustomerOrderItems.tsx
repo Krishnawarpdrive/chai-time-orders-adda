@@ -58,13 +58,13 @@ const CustomerOrderItems = ({
   const getStatusBadge = (status: ItemStatus) => {
     switch (status) {
       case 'Not Started':
-        return <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">Not Started</span>;
+        return <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">Not Yet Started</span>;
       case 'Started':
-        return <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">In Progress</span>;
+        return <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Preparing</span>;
       case 'Finished':
-        return <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Finished</span>;
+        return <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Order Prepared</span>;
       case 'Ready for Hand Over':
-        return <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-medium">Ready for Hand Over</span>;
+        return <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-medium">Order Delivered</span>;
       default:
         return null;
     }
@@ -100,25 +100,37 @@ const CustomerOrderItems = ({
                     <Button 
                       onClick={() => onStatusChange(orderId, item.id, 'Started')} 
                       disabled={item.status !== 'Not Started' && item.status !== 'Started'} 
-                      className="h-8 px-2 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90 text-sm"
+                      className="h-10 px-3 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90 text-sm flex"
                     >
-                      <Play className="h-3 w-3 mr-1" /> Start
+                      <Play className="h-4 w-4 mr-2" />
+                      <div className="flex flex-col items-start">
+                        <span>Start</span>
+                        <span>Making</span>
+                      </div>
                     </Button>
                     
                     <Button 
                       onClick={() => onStatusChange(orderId, item.id, 'Finished')} 
-                      className="h-8 px-2 font-medium bg-coffee-green text-white hover:bg-coffee-green/90 text-sm" 
+                      className="h-10 px-3 font-medium bg-coffee-green text-white hover:bg-coffee-green/90 text-sm flex" 
                       disabled={item.status === 'Not Started' || item.status === 'Ready for Hand Over'}
                     >
-                      <Check className="h-3 w-3 mr-1" /> Finish
+                      <Check className="h-4 w-4 mr-2" />
+                      <div className="flex flex-col items-start">
+                        <span>Finish</span>
+                        <span>Making</span>
+                      </div>
                     </Button>
                     
                     <Button 
                       onClick={() => onStatusChange(orderId, item.id, 'Ready for Hand Over')} 
-                      className="h-8 px-2 font-medium bg-milk-sugar text-coffee-green hover:bg-milk-sugar/90 text-sm" 
+                      className="h-10 px-3 font-medium bg-milk-sugar text-coffee-green hover:bg-milk-sugar/90 text-sm flex" 
                       disabled={item.status !== 'Finished' && item.status !== 'Ready for Hand Over'}
                     >
-                      <ArrowRight className="h-3 w-3 mr-1" /> Hand Over
+                      <ArrowRight className="h-4 w-4 mr-2" />
+                      <div className="flex flex-col items-start">
+                        <span>Hand</span>
+                        <span>Over</span>
+                      </div>
                     </Button>
                   </div>
                 </td>

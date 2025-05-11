@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronUp, Play, Check, ArrowRight, Coffee, Cookie, Leaf, Star } from 'lucide-react';
+import { ChevronDown, ChevronUp, Play, Check, ArrowRight, Coffee, Cookie, Leaf, Star, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { orderService } from '@/services/orderService';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +21,17 @@ import {
 } from "@/components/ui/collapsible";
 import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Status types
 type ItemStatus = 'Not Started' | 'Started' | 'Finished' | 'Ready for Hand Over';
@@ -55,6 +66,7 @@ const ItemOrdersTable = ({ items, loading }: ItemOrdersTableProps) => {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [itemsData, setItemsData] = useState<ItemData[]>(items);
   const { toast } = useToast();
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   // Update items when props change
   React.useEffect(() => {
@@ -196,6 +208,15 @@ const ItemOrdersTable = ({ items, loading }: ItemOrdersTableProps) => {
     }
   };
 
+  // Generate QR Code for an order
+  const generateQRCode = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    toast({
+      title: "QR Code Generated",
+      description: `QR Code for order ${orderId} has been generated.`,
+    });
+  };
+
   if (loading) {
     return (
       <div className="w-full flex justify-center items-center h-64">
@@ -205,133 +226,178 @@ const ItemOrdersTable = ({ items, loading }: ItemOrdersTableProps) => {
   }
 
   return (
-    <Card className="bg-white shadow rounded-lg border border-gray-200">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[50px]"></TableHead>
-            <TableHead>Item Name</TableHead>
-            <TableHead className="text-center">Quantity</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {itemsData.map((item) => (
-            <React.Fragment key={item.id}>
-              <TableRow className={cn("hover-row", isItemExpanded(item.id) ? "bg-milk-sugar/20" : "")}>
-                <TableCell>
-                  <Collapsible open={isItemExpanded(item.id)}>
-                    <CollapsibleTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-10 w-10 rounded-full" 
-                        onClick={() => toggleItemExpansion(item.id)}
-                      >
-                        {isItemExpanded(item.id) ? <ChevronUp className="h-6 w-6" /> : <ChevronDown className="h-6 w-6" />}
-                      </Button>
-                    </CollapsibleTrigger>
-                  </Collapsible>
-                </TableCell>
-                <TableCell className="font-medium flex items-center gap-2">
-                  {getItemIcon(item.name)} <span className="text-lg">{item.name}</span>
-                </TableCell>
-                <TableCell className="text-center text-lg">{item.totalQuantity}</TableCell>
-                <TableCell>
-                  <div className="flex gap-4">
-                    <Button 
-                      onClick={() => updateItemStatus(item.id, 'Started')}
-                      className="h-16 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90 rounded-lg flex flex-col items-center justify-center px-6"
-                    >
-                      <Play className="h-6 w-6 mb-1" />
-                      <div className="text-sm">Start<br />Making</div>
-                    </Button>
-                    
-                    <Button 
-                      onClick={() => updateItemStatus(item.id, 'Finished')}
-                      className="h-16 font-medium bg-coffee-green text-white hover:bg-coffee-green/90 rounded-lg flex flex-col items-center justify-center px-6"
-                    >
-                      <Check className="h-6 w-6 mb-1" />
-                      <div className="text-sm">Finish<br />Making</div>
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-              <TableRow className={cn(isItemExpanded(item.id) ? "" : "hidden")}>
-                <TableCell colSpan={4} className="p-0">
-                  <Collapsible open={isItemExpanded(item.id)}>
-                    <CollapsibleContent>
-                      <div className="px-4 py-3 bg-milk-sugar/10">
-                        <h4 className="text-lg font-medium text-coffee-green mb-4">Customer Orders</h4>
-                        <table className="w-full text-base">
-                          <thead>
-                            <tr className="text-sm text-gray-500 border-b">
-                              <th className="text-left pb-2 pl-1">Customer Name</th>
-                              <th className="text-center pb-2">Quantity</th>
-                              <th className="text-center pb-2">Last Visit</th>
-                              <th className="text-center pb-2">Rating</th>
-                              <th className="text-right pb-2 pr-1">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {item.orders.map((order) => (
-                              <tr 
-                                key={`${item.id}-${order.orderId}`} 
-                                className="border-b border-gray-100 last:border-0"
-                              >
-                                <td className="py-3 pl-1 text-lg">{order.customerName}</td>
-                                <td className="py-3 text-center text-lg">{order.quantity}</td>
-                                <td className="py-3 text-center">{formatDate(order.lastVisit || new Date().toISOString())}</td>
-                                <td className="py-3 text-center">{renderStarRating(getRating(order.orderId))}</td>
-                                <td className="py-3 text-right pr-1">
-                                  {item.status === 'Finished' && order.status !== 'Handed Over' ? (
-                                    <Button 
-                                      className="h-16 font-medium bg-milk-sugar text-coffee-green hover:bg-milk-sugar/90 rounded-lg flex flex-col items-center justify-center px-6"
-                                      onClick={() => updateCustomerOrderStatus(item.id, order.orderId, 'Handed Over')}
-                                    >
-                                      <ArrowRight className="h-6 w-6 mb-1" />
-                                      <div className="text-sm">Hand<br />Over</div>
-                                    </Button>
-                                  ) : order.status === 'Handed Over' ? (
-                                    <Button 
-                                      variant="ghost" 
-                                      className="h-16 font-medium text-green-800 bg-green-100 rounded-lg flex flex-col items-center justify-center px-6"
-                                      disabled
-                                    >
-                                      <Check className="h-6 w-6 mb-1" />
-                                      <div className="text-sm">Handed<br />Over</div>
-                                    </Button>
-                                  ) : (
-                                    <Button 
-                                      variant="ghost" 
-                                      className="h-16 font-medium text-gray-400 rounded-lg flex flex-col items-center justify-center px-6"
-                                      disabled
-                                    >
-                                      <span className="text-sm">Finish<br />Item First</span>
-                                    </Button>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </TableCell>
-              </TableRow>
-            </React.Fragment>
-          ))}
-          {items.length === 0 && (
+    <TooltipProvider>
+      <Card className="bg-white shadow rounded-lg border border-gray-200">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={4} className="text-center py-8">
-                <p className="text-gray-500 text-lg">No items found</p>
-              </TableCell>
+              <TableHead className="w-[50px]"></TableHead>
+              <TableHead>Item Name</TableHead>
+              <TableHead className="text-center">Quantity</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </Card>
+          </TableHeader>
+          <TableBody>
+            {itemsData.map((item) => (
+              <React.Fragment key={item.id}>
+                <TableRow className={cn("hover-row", isItemExpanded(item.id) ? "bg-milk-sugar/20" : "")}>
+                  <TableCell>
+                    <Collapsible open={isItemExpanded(item.id)}>
+                      <CollapsibleTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-10 w-10 rounded-full" 
+                          onClick={() => toggleItemExpansion(item.id)}
+                        >
+                          {isItemExpanded(item.id) ? <ChevronUp className="h-6 w-6" /> : <ChevronDown className="h-6 w-6" />}
+                        </Button>
+                      </CollapsibleTrigger>
+                    </Collapsible>
+                  </TableCell>
+                  <TableCell className="font-medium flex items-center gap-2">
+                    {getItemIcon(item.name)} <span className="text-lg">{item.name}</span>
+                  </TableCell>
+                  <TableCell className="text-center text-lg">{item.totalQuantity}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-4">
+                      <Button 
+                        onClick={() => updateItemStatus(item.id, 'Started')}
+                        className="h-20 w-32 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90 rounded-lg flex items-center justify-center"
+                      >
+                        <Play className="h-6 w-6 mr-3" />
+                        <div className="flex flex-col items-start">
+                          <span>Start</span>
+                          <span>Making</span>
+                        </div>
+                      </Button>
+                      
+                      <Button 
+                        onClick={() => updateItemStatus(item.id, 'Finished')}
+                        className="h-20 w-32 font-medium bg-coffee-green text-white hover:bg-coffee-green/90 rounded-lg flex items-center justify-center"
+                      >
+                        <Check className="h-6 w-6 mr-3" />
+                        <div className="flex flex-col items-start">
+                          <span>Finish</span>
+                          <span>Making</span>
+                        </div>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+                <TableRow className={cn(isItemExpanded(item.id) ? "" : "hidden")}>
+                  <TableCell colSpan={4} className="p-0">
+                    <Collapsible open={isItemExpanded(item.id)}>
+                      <CollapsibleContent>
+                        <div className="px-4 py-3 bg-milk-sugar/10">
+                          <h4 className="text-lg font-medium text-coffee-green mb-4">Customer Orders</h4>
+                          <table className="w-full text-base">
+                            <thead>
+                              <tr className="text-sm text-gray-500 border-b">
+                                <th className="text-left pb-2 pl-1">Customer Name</th>
+                                <th className="text-center pb-2">Quantity</th>
+                                <th className="text-center pb-2">Last Visit</th>
+                                <th className="text-center pb-2">Rating</th>
+                                <th className="text-right pb-2 pr-1">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {item.orders.map((order) => (
+                                <tr 
+                                  key={`${item.id}-${order.orderId}`} 
+                                  className="border-b border-gray-100 last:border-0"
+                                >
+                                  <td className="py-3 pl-1 text-lg">{order.customerName}</td>
+                                  <td className="py-3 text-center text-lg">{order.quantity}</td>
+                                  <td className="py-3 text-center">{formatDate(order.lastVisit || new Date().toISOString())}</td>
+                                  <td className="py-3 text-center">{renderStarRating(getRating(order.orderId))}</td>
+                                  <td className="py-3 text-right pr-1">
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        {item.status === 'Finished' && order.status !== 'Handed Over' ? (
+                                          <Button 
+                                            className="h-20 w-32 font-medium bg-milk-sugar text-coffee-green hover:bg-milk-sugar/90 rounded-lg flex items-center justify-center"
+                                            onClick={() => updateCustomerOrderStatus(item.id, order.orderId, 'Handed Over')}
+                                          >
+                                            <ArrowRight className="h-6 w-6 mr-3" />
+                                            <div className="flex flex-col items-start">
+                                              <span>Hand</span>
+                                              <span>Over</span>
+                                            </div>
+                                          </Button>
+                                        ) : order.status === 'Handed Over' ? (
+                                          <Button 
+                                            variant="ghost" 
+                                            className="h-20 w-32 font-medium text-green-800 bg-green-100 rounded-lg flex items-center justify-center"
+                                          >
+                                            <Check className="h-6 w-6 mr-3" />
+                                            <div className="flex flex-col items-start">
+                                              <span>Handed</span>
+                                              <span>Over</span>
+                                            </div>
+                                          </Button>
+                                        ) : (
+                                          <Button 
+                                            variant="ghost" 
+                                            className="h-20 w-32 font-medium text-gray-400 rounded-lg flex items-center justify-center"
+                                            disabled
+                                          >
+                                            <div className="flex flex-col items-center">
+                                              <span>Finish</span>
+                                              <span>Item First</span>
+                                            </div>
+                                          </Button>
+                                        )}
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-80 p-4">
+                                        <div className="flex flex-col space-y-4">
+                                          <h4 className="font-semibold text-lg">Order Details</h4>
+                                          <div>
+                                            <p><span className="font-medium">Customer:</span> {order.customerName}</p>
+                                            <p><span className="font-medium">Order ID:</span> {order.orderId}</p>
+                                            <p><span className="font-medium">Item:</span> {item.name}</p>
+                                            <p><span className="font-medium">Quantity:</span> {order.quantity}</p>
+                                          </div>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button 
+                                                onClick={() => generateQRCode(order.orderId)} 
+                                                className="fixed bottom-4 w-[calc(100%-32px)] h-12 bg-bisi-orange text-white hover:bg-bisi-orange/90 shadow-lg"
+                                              >
+                                                <QrCode className="mr-2 h-5 w-5" />
+                                                Generate QR Code
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Generate QR code for customer to track order</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </div>
+                                      </PopoverContent>
+                                    </Popover>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </TableCell>
+                </TableRow>
+              </React.Fragment>
+            ))}
+            {items.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-8">
+                  <p className="text-gray-500 text-lg">No items found</p>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Card>
+    </TooltipProvider>
   );
 };
 

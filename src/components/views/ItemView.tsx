@@ -6,6 +6,7 @@ import { Search } from 'lucide-react';
 import { orderService } from '@/services/orderService';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from "@/integrations/supabase/client";
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 export const ItemView = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,21 +63,23 @@ export const ItemView = () => {
   );
 
   return (
-    <div className="w-full">
-      <div className="mb-4 relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
+    <TooltipProvider>
+      <div className="w-full">
+        <div className="mb-4 relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <Input
+            type="text"
+            placeholder="Search items..."
+            className="pl-10 h-12 text-base"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
-        <Input
-          type="text"
-          placeholder="Search items..."
-          className="pl-10 h-12 text-base"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
 
-      <ItemOrdersTable items={filteredItems} loading={loading} />
-    </div>
+        <ItemOrdersTable items={filteredItems} loading={loading} />
+      </div>
+    </TooltipProvider>
   );
 };
