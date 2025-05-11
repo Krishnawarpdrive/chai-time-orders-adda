@@ -4,35 +4,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Calendar, Clipboard, AlertCircle } from 'lucide-react';
-
-interface OutletMetrics {
-  id: string;
-  name: string;
-  location: string;
-  orderVolume: number;
-  pendingOrders: number;
-  completedOrders: number;
-  inventoryStatus: 'Good' | 'Warning' | 'Critical';
-  customerRating: number;
-  hasScheduledAudit: boolean;
-  lastAuditDate: string;
-  auditScore?: number;
-}
+import { OutletMetrics, getInventoryStatusColor } from './types';
 
 interface OutletsTableProps {
   outlets: OutletMetrics[];
 }
 
 const OutletsTable = ({ outlets }: OutletsTableProps) => {
-  const getInventoryStatusColor = (status: string) => {
-    switch(status) {
-      case 'Good': return 'bg-green-100 text-green-800';
-      case 'Warning': return 'bg-yellow-100 text-yellow-800';
-      case 'Critical': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
     <div className="w-full overflow-auto">
       <Table>
