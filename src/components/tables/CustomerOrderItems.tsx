@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { OrderItem } from '@/lib/data';
 import { Button } from '@/components/ui/button';
@@ -87,9 +88,10 @@ const CustomerOrderItems = ({
                 <td className="py-2 text-center">{getStatusBadge(item.status)}</td>
                 <td className="py-2 text-right pr-1">
                   <div className="flex justify-end gap-2">
-                    <Button onClick={() => updateItemStatus(item.id, 'Started')} disabled={item.status !== 'Not Started' && item.status !== 'Started'} className="h-12 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90 text-base">
-                      <Play className="h-4 w-4 mr-1" />
-                      Start Making
+                    <Button onClick={() => updateItemStatus(item.id, 'Started')} disabled={item.status !== 'Not Started' && item.status !== 'Started'} className="h-12 w-12 aspect-square font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90 text-base flex flex-col">
+                      <Play className="h-4 w-4" />
+                      <span className="text-xs">Start</span>
+                      <span className="text-xs">Making</span>
                     </Button>
                     
                     <Button onClick={() => updateItemStatus(item.id, 'Finished')} className="h-12 font-medium bg-coffee-green text-white hover:bg-coffee-green/90" disabled={item.status === 'Not Started' || item.status === 'Ready for Hand Over'}>
