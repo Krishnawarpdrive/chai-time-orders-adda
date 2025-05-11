@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Package, AlertCircle, Check } from 'lucide-react';
+import { Package, AlertCircle, Check, CalendarClock } from 'lucide-react';
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { useInventory, type InventoryItem } from "@/hooks/useInventory";
@@ -8,6 +8,7 @@ import InventoryItemCard from "@/components/inventory/InventoryItem";
 import UpdateInventoryDialog from "@/components/inventory/UpdateInventoryDialog";
 import InventoryRequestDialog from "@/components/inventory/InventoryRequestDialog";
 import { useToast } from "@/hooks/use-toast";
+import { format, addBusinessDays } from 'date-fns';
 
 const ProductInventorySidebar = () => {
   const { inventory, loading, error, updateInventoryItem } = useInventory();
@@ -18,6 +19,10 @@ const ProductInventorySidebar = () => {
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState<boolean>(false);
   const [requestItems, setRequestItems] = useState<Array<InventoryItem & { requestQuantity: number }>>([]);
 
+  // Calculate estimated delivery date (2 business days from now)
+  const estimatedDeliveryDate = addBusinessDays(new Date(), 2);
+  const formattedDeliveryDate = format(estimatedDeliveryDate, 'EEEE, MMMM d');
+  
   const handleUpdateInventory = (item: InventoryItem) => {
     setSelectedItem(item);
     setIsDialogOpen(true);
@@ -70,6 +75,11 @@ const ProductInventorySidebar = () => {
     setIsRequestMode(false);
   };
 
+  // Filter items that are near or below reorder level when in request mode
+  const displayedInventory = isRequestMode 
+    ? inventory.filter(item => item.quantity <= item.reorder_level * 1.5)
+    : inventory;
+
   return (
     <div className="fixed right-0 top-0 h-screen w-72 border-l border-gray-200 bg-white shadow-lg overflow-y-auto p-4">
       <h2 className="text-xl font-semibold mb-4 text-coffee-green flex items-center gap-2">
@@ -90,7 +100,7 @@ const ProductInventorySidebar = () => {
               Request Mode
             </>
           ) : (
-            "Make Inventory Request"
+            "Request Inventory"
           )}
         </Button>
         
@@ -105,6 +115,13 @@ const ProductInventorySidebar = () => {
           </Button>
         )}
       </div>
+
+      {isRequestMode && (
+        <div className="mb-4 px-3 py-2 bg-blue-50 border border-blue-100 rounded-md flex items-center text-xs text-blue-700">
+          <CalendarClock size={14} className="mr-2 flex-shrink-0" />
+          <span>Estimated delivery: <strong>{formattedDeliveryDate}</strong></span>
+        </div>
+      )}
 
       {loading && (
         <div className="flex flex-col items-center justify-center py-8">
@@ -123,7 +140,7 @@ const ProductInventorySidebar = () => {
       )}
 
       <div className="space-y-4">
-        {inventory.map((item) => (
+        {displayedInventory.map((item) => (
           <InventoryItemCard 
             key={item.id}
             item={item}
@@ -133,7 +150,7 @@ const ProductInventorySidebar = () => {
           />
         ))}
 
-        {inventory.length === 0 && !loading && !error && (
+        {displayedInventory.length === 0 && !loading && !error && (
           <div className="text-center py-6 text-gray-500">
             <p>No inventory items found</p>
           </div>
@@ -152,6 +169,7 @@ const ProductInventorySidebar = () => {
         onOpenChange={setIsRequestDialogOpen}
         requestItems={requestItems}
         onClearRequest={clearRequest}
+        estimatedDeliveryDate={formattedDeliveryDate}
       />
     </div>
   );
