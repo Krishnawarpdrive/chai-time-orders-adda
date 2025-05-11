@@ -15,7 +15,7 @@ const CustomerOrderTableHeader = () => {
         <TableHead>Customer Name</TableHead>
         <TableHead>Last Visit</TableHead>
         <TableHead>Last Order</TableHead>
-        <TableHead>Rating</TableHead>
+        <TableHead>Last Rating</TableHead>
         <TableHead>Order Status</TableHead>
         <TableHead className="text-right">Amount</TableHead>
       </TableRow>
