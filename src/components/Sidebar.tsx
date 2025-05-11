@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Users, Package, Tag, Percent, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
-import InventorySidebar from './InventorySidebar';
+import ProductInventorySidebar from './ProductInventorySidebar';
 
 interface SidebarProps {
   className?: string;
@@ -33,7 +33,7 @@ export function Sidebar({ className }: SidebarProps) {
       path: '/categories'
     },
     { 
-      title: 'Inventory', 
+      title: 'Products', 
       icon: Package, 
       path: '/products'
     },
@@ -130,8 +130,8 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
       </aside>
 
-      {/* Inventory Sidebar - Show only when on the Products page */}
-      {isProductsPage && <InventorySidebar />}
+      {/* Product Inventory Sidebar - Show only when on the Products page */}
+      {isProductsPage && <ProductInventorySidebar />}
     </>
   );
 }
