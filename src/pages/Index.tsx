@@ -11,11 +11,13 @@ import { ItemView } from '@/components/views/ItemView';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import NewOrderFormDialog from '@/components/NewOrderFormDialog';
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
   const { toast } = useToast();
   const [isNewOrderDialogOpen, setIsNewOrderDialogOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const isMobile = useIsMobile();
   
   // Handle scroll events to detect when to collapse the header
   useEffect(() => {
@@ -47,7 +49,9 @@ const Index = () => {
       <div className="flex-1 flex flex-col">
         {/* Header - Collapsing on scroll */}
         <header className={`bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-40 transition-all duration-300 ${isScrolled ? 'h-12 py-1' : 'h-auto'}`}>
-          <h1 className={`font-hackney ${isScrolled ? 'text-xl' : 'text-2xl'} text-coffee-green transition-all duration-300`}>Staff Dashboard</h1>
+          <h1 className={`font-hackney ${isScrolled ? 'text-xl' : 'text-2xl'} text-coffee-green transition-all duration-300`}>
+            {isMobile ? 'Orders' : 'Staff Dashboard'}
+          </h1>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon" className="relative">
               <Bell className={`${isScrolled ? 'h-4 w-4' : 'h-5 w-5'} transition-all duration-300`} />
