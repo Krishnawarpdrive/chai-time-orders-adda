@@ -1,8 +1,21 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { Users, Package, Tag, Percent, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
+import { 
+  Users, 
+  Package, 
+  Tag, 
+  Percent, 
+  ClipboardList, 
+  ChevronLeft, 
+  ChevronRight,
+  BoxIcon
+} from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 interface SidebarProps {
   className?: string;
@@ -15,8 +28,19 @@ interface NavItem {
   badge?: number;
 }
 
+interface InventoryItem {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+}
+
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [isInventoryDialogOpen, setIsInventoryDialogOpen] = useState(false);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [requestQuantities, setRequestQuantities] = useState<Record<string, number>>({});
+  const { toast } = useToast();
 
   const navItems: NavItem[] = [
     { 
@@ -45,7 +69,64 @@ export function Sidebar({ className }: SidebarProps) {
       path: '/',
       badge: 5
     },
+    {
+      title: 'Inventory',
+      icon: BoxIcon,
+      path: '/inventory'
+    }
   ];
+  
+  // Sample inventory data - in a real app, this would come from an API/database
+  useEffect(() => {
+    // Simulating API call to fetch inventory
+    const fetchInventory = () => {
+      const sampleInventory: InventoryItem[] = [
+        { id: '1', name: 'Coffee Powder', quantity: 50, unit: 'kg' },
+        { id: '2', name: 'Cups', quantity: 2000, unit: 'units' },
+        { id: '3', name: 'Ginger', quantity: 10, unit: 'kg' },
+        { id: '4', name: 'Sugar', quantity: 75, unit: 'kg' },
+        { id: '5', name: 'Milk', quantity: 100, unit: 'liters' },
+      ];
+      
+      setInventoryItems(sampleInventory);
+      
+      // Initialize request quantities
+      const initialQuantities: Record<string, number> = {};
+      sampleInventory.forEach(item => {
+        initialQuantities[item.id] = 0;
+      });
+      setRequestQuantities(initialQuantities);
+    };
+    
+    fetchInventory();
+  }, []);
+  
+  const handleRequestChange = (itemId: string, value: number) => {
+    setRequestQuantities(prev => ({
+      ...prev,
+      [itemId]: value
+    }));
+  };
+  
+  const handleSubmitRequest = () => {
+    // In a real app, this would send the request to a backend API
+    console.log('Submitting inventory request:', requestQuantities);
+    
+    toast({
+      title: "Inventory Request Submitted",
+      description: "Your inventory request has been sent successfully.",
+    });
+    
+    // Reset request quantities
+    const resetQuantities: Record<string, number> = {};
+    inventoryItems.forEach(item => {
+      resetQuantities[item.id] = 0;
+    });
+    setRequestQuantities(resetQuantities);
+    
+    // Close dialog
+    setIsInventoryDialogOpen(false);
+  };
 
   return (
     <aside 
@@ -112,8 +193,51 @@ export function Sidebar({ className }: SidebarProps) {
         </ul>
       </nav>
 
+      {/* Inventory Section */}
+      {!collapsed && (
+        <div className="border-t border-white/20 p-4 mt-auto">
+          <div className="sidebar-inventory">
+            <h3 className="font-medium text-white/90 mb-2">Product Inventory</h3>
+            <ul className="space-y-2 mb-4">
+              {inventoryItems.slice(0, 3).map((item) => (
+                <li key={item.id} className="flex justify-between items-center text-sm">
+                  <span>{item.name}</span>
+                  <span className="text-white/80">{item.quantity} {item.unit}</span>
+                </li>
+              ))}
+              {inventoryItems.length > 3 && (
+                <li className="text-xs text-white/60 text-center">
+                  {inventoryItems.length - 3} more items...
+                </li>
+              )}
+            </ul>
+            <Button 
+              className="w-full bg-white text-coffee-green hover:bg-white/90" 
+              size="sm"
+              onClick={() => setIsInventoryDialogOpen(true)}
+            >
+              Send Inventory Request
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Collapsed Inventory Button */}
+      {collapsed && (
+        <div className="p-2 mt-auto border-t border-white/20">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="w-full h-10 border-white/30 text-white hover:bg-white/10 hover:text-white"
+            onClick={() => setIsInventoryDialogOpen(true)}
+          >
+            <BoxIcon size={18} />
+          </Button>
+        </div>
+      )}
+
       {/* Bottom section */}
-      <div className="p-4 mt-auto">
+      <div className="p-4">
         {!collapsed && (
           <div className="text-white/70 text-xs text-center">
             <p>ಸ್ವಾಗತ!</p>
@@ -121,6 +245,51 @@ export function Sidebar({ className }: SidebarProps) {
           </div>
         )}
       </div>
+      
+      {/* Inventory Request Dialog */}
+      <Dialog open={isInventoryDialogOpen} onOpenChange={setIsInventoryDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Inventory Request</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="space-y-4">
+              {inventoryItems.map((item) => (
+                <div key={item.id} className="grid grid-cols-12 gap-4 items-center">
+                  <div className="col-span-5">
+                    <label className="text-sm font-medium">{item.name}</label>
+                  </div>
+                  <div className="col-span-3 text-sm text-gray-500">
+                    Current: {item.quantity} {item.unit}
+                  </div>
+                  <div className="col-span-4">
+                    <Input 
+                      type="number" 
+                      min="0"
+                      value={requestQuantities[item.id] || 0}
+                      onChange={(e) => handleRequestChange(item.id, parseInt(e.target.value) || 0)}
+                      placeholder="Requested Quantity"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsInventoryDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmitRequest}
+              disabled={Object.values(requestQuantities).every(qty => qty === 0)}
+            >
+              Confirm Request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </aside>
   );
 }

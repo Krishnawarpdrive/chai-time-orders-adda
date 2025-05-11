@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Order, OrderItem, MenuItem, Customer } from "@/types/supabase";
 
@@ -92,6 +91,20 @@ export const orderService = {
       ...orderData,
       items: orderItems as OrderItem[]
     } as Order;
+  },
+
+  async getOrderHistoryByCustomer(customerName: string): Promise<Order[]> {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, items:order_items(*, item:item_id(name, price, category))')
+      .eq('customer_name', customerName)
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error("Error fetching customer order history:", error);
+      return [];
+    }
+    return data as Order[];
   },
 
   async createOrder(
