@@ -16,6 +16,19 @@ export interface MenuItem {
   category: 'coffee' | 'tea' | 'snack';
 }
 
+export type OrderStatus = 
+  | 'Pending' 
+  | 'Accepted' 
+  | 'Preparing' 
+  | 'Ready To Pick' 
+  | 'Picked' 
+  | 'Completed' 
+  | 'Cancelled'
+  | 'Not Started'
+  | 'Started'
+  | 'Finished'
+  | 'Ready for Hand Over';
+
 export interface Order {
   id: string;
   order_id: string;
@@ -24,7 +37,7 @@ export interface Order {
   dob: string | null;
   customer_badge: string;
   amount: number;
-  status: string;
+  status: OrderStatus | string;
   created_at: string;
   updated_at: string;
   items?: OrderItem[];

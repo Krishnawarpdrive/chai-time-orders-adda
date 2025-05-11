@@ -33,10 +33,15 @@ export const orderService = {
     return data as Customer;
   },
   
-  async createCustomer(customer: Partial<Customer>): Promise<Customer | null> {
+  async createCustomer(customer: Pick<Customer, 'name' | 'phone_number'> & Partial<Omit<Customer, 'name' | 'phone_number'>>): Promise<Customer | null> {
     const { data, error } = await supabase
       .from('customers')
-      .insert(customer) // Fix: Removed the array brackets
+      .insert({
+        name: customer.name,
+        phone_number: customer.phone_number,
+        dob: customer.dob || null,
+        badge: customer.badge || 'New'
+      })
       .select()
       .single();
       
@@ -89,11 +94,22 @@ export const orderService = {
     } as Order;
   },
 
-  async createOrder(order: Partial<Order>, orderItems: Partial<OrderItem>[]): Promise<Order | null> {
+  async createOrder(
+    order: Pick<Order, 'order_id' | 'customer_name' | 'phone_number' | 'amount'> & Partial<Omit<Order, 'order_id' | 'customer_name' | 'phone_number' | 'amount'>>, 
+    orderItems: Partial<OrderItem>[]
+  ): Promise<Order | null> {
     // Start a transaction
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
-      .insert(order) // Fix: Removed the array brackets
+      .insert({
+        order_id: order.order_id,
+        customer_name: order.customer_name,
+        phone_number: order.phone_number,
+        amount: order.amount,
+        dob: order.dob || null,
+        customer_badge: order.customer_badge || 'New',
+        status: order.status || 'Pending'
+      })
       .select()
       .single();
       

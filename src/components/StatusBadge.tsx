@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 interface StatusBadgeProps {
-  status: OrderStatus;
+  status: OrderStatus | string;
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
