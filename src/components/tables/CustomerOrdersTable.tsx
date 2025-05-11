@@ -157,9 +157,9 @@ const CustomerOrdersTable = ({
           <CustomerOrderTableHeader showRating={false} />
           <TableBody>
             {orders.map((order) => {
-              const { lastVisitDate, previousOrders } = getCustomerHistoryForOrder(order);
+              const { previousOrders } = getCustomerHistoryForOrder(order);
               return (
-                <React.Fragment key={order.id}>
+                <React.Fragment key={`order-group-${order.id}`}>
                   <CustomerOrderRow 
                     order={order}
                     isExpanded={isRowExpanded(order.id)}
@@ -177,7 +177,6 @@ const CustomerOrdersTable = ({
                     customerName={order.customer_name}
                     onStatusChange={handleItemStatusChange}
                     getRating={getRating}
-                    lastVisitDate={lastVisitDate}
                     previousOrders={previousOrders}
                   />
                 </React.Fragment>

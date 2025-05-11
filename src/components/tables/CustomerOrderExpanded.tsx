@@ -15,7 +15,6 @@ import { OrderStatus } from '@/types/supabase';
 import StarRating from './StarRating';
 import { formatDate } from './customerOrdersUtils';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface CustomerOrderExpandedProps {
@@ -36,10 +35,8 @@ const CustomerOrderExpanded = ({
   customerName,
   onStatusChange,
   getRating,
-  lastVisitDate,
   previousOrders = []
 }: CustomerOrderExpandedProps) => {
-  const [showAllOrders, setShowAllOrders] = useState(false);
   
   return (
     <TableRow className={cn(isExpanded ? "" : "hidden")}>
@@ -64,7 +61,7 @@ const CustomerOrderExpanded = ({
               </div>
               
               <div className="space-y-4">
-                {/* Customer Summary as text instead of a card */}
+                {/* Customer Summary as simple text, not a card */}
                 <div className="bg-white p-4 rounded-lg border border-gray-100">
                   <h4 className="text-lg font-medium text-coffee-green mb-3">Customer Summary</h4>
                   <div className="space-y-2">
@@ -81,35 +78,33 @@ const CustomerOrderExpanded = ({
                 </div>
                 
                 {previousOrders.length > 0 && (
-                  <Card>
-                    <CardContent className="pt-6">
-                      <Accordion type="single" collapsible>
-                        <AccordionItem value="previous-orders">
-                          <AccordionTrigger className="text-coffee-green">
-                            Previous Orders ({previousOrders.length})
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <ScrollArea className="h-[180px] w-full">
-                              <div className="space-y-2">
-                                {previousOrders.map((order) => (
-                                  <div 
-                                    key={order.id} 
-                                    className="flex justify-between border-b border-gray-100 pb-2"
-                                  >
-                                    <div>
-                                      <div className="font-medium text-sm">{order.order_id}</div>
-                                      <div className="text-xs text-gray-500">{formatDate(order.date)}</div>
-                                    </div>
-                                    <div className="font-medium">₹{order.amount.toFixed(2)}</div>
+                  <div className="bg-white rounded-lg border border-gray-100">
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="previous-orders" className="border-none">
+                        <AccordionTrigger className="text-coffee-green px-4 py-3">
+                          Previous Orders ({previousOrders.length})
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-3">
+                          <ScrollArea className="h-[180px] w-full">
+                            <div className="space-y-2">
+                              {previousOrders.map((order) => (
+                                <div 
+                                  key={order.id} 
+                                  className="flex justify-between border-b border-gray-100 pb-2"
+                                >
+                                  <div>
+                                    <div className="font-medium text-sm">{order.order_id}</div>
+                                    <div className="text-xs text-gray-500">{formatDate(order.date)}</div>
                                   </div>
-                                ))}
-                              </div>
-                            </ScrollArea>
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    </CardContent>
-                  </Card>
+                                  <div className="font-medium">₹{order.amount.toFixed(2)}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </div>
                 )}
               </div>
             </div>
