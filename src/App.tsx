@@ -12,6 +12,11 @@ import StaffPage from "./pages/Staff";
 import OutletsPage from "./pages/Outlets";
 import ReportsPage from "./pages/Reports";
 import ReferPage from "./pages/Refer";
+import CustomerHome from "./pages/CustomerHome";
+import CustomerProfile from "./pages/CustomerProfile";
+import CustomerOrders from "./pages/CustomerOrders";
+import CustomerRefer from "./pages/CustomerRefer";
+import CustomerCart from "./pages/CustomerCart";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +28,15 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Home />} />
+            {/* Customer routes */}
+            <Route path="/" element={<CustomerHome />} />
+            <Route path="/profile" element={<CustomerProfile />} />
+            <Route path="/orders" element={<CustomerOrders />} />
+            <Route path="/refer" element={<CustomerRefer />} />
+            <Route path="/cart" element={<CustomerCart />} />
+            
+            {/* Admin/Staff routes */}
+            <Route path="/admin" element={<Home />} />
             <Route path="/customers" element={<Home />} />
             <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/staff" element={<StaffPage />} />
@@ -31,10 +44,7 @@ const App = () => {
             <Route path="/categories" element={<Home />} />
             <Route path="/products" element={<Products />} />
             <Route path="/offers" element={<Home />} />
-            <Route path="/orders" element={<Home />} />
-            <Route path="/profile" element={<Home />} />
-            <Route path="/cart" element={<Home />} />
-            <Route path="/refer" element={<ReferPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
