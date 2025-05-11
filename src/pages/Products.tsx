@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Package, ShoppingBag, AlertCircle } from 'lucide-react';
@@ -30,9 +29,9 @@ const Products = () => {
     const fetchInventory = async () => {
       setLoading(true);
       try {
-        // Using fetch API with direct URL construction to avoid protected property access
-        const apiUrl = `${process.env.SUPABASE_URL || 'https://yourprojectid.supabase.co'}/rest/v1/inventory?select=*&order=name`;
-        const apiKey = process.env.SUPABASE_ANON_KEY || supabase.auth.session()?.access_token || '';
+        // Using direct Supabase URL and API key from client
+        const apiUrl = `${process.env.SUPABASE_URL || 'https://chwgvicccbgbuyjfqjad.supabase.co'}/rest/v1/inventory?select=*&order=name`;
+        const apiKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNod2d2aWNjY2JnYnV5amZxamFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5MzE1OTEsImV4cCI6MjA2MjUwNzU5MX0.D4lU-eVoYyQXHPEob_OlFJXRZRwcpxWW9FWWcbuG4qg';
         
         const response = await fetch(apiUrl, {
           headers: {
