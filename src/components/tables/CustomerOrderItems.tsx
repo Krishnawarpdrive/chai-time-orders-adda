@@ -1,40 +1,39 @@
-
 import React, { useState } from 'react';
 import { OrderItem } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Coffee, Cookie, Leaf, Play, Check, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
 type ItemStatus = 'Not Started' | 'Started' | 'Finished' | 'Ready for Hand Over';
-
 interface CustomerOrderItemsProps {
   items: OrderItem[];
   orderId: string;
   customerName: string;
   onStatusChange: (orderId: string, itemId: number, newStatus: ItemStatus) => void;
 }
-
 interface OrderItemWithStatus extends OrderItem {
   status: ItemStatus;
 }
-
-const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: CustomerOrderItemsProps) => {
+const CustomerOrderItems = ({
+  items,
+  orderId,
+  customerName,
+  onStatusChange
+}: CustomerOrderItemsProps) => {
   // Add mock status for each item
-  const [itemsWithStatus, setItemsWithStatus] = useState<OrderItemWithStatus[]>(
-    items.map(item => ({ ...item, status: 'Not Started' }))
-  );
-
+  const [itemsWithStatus, setItemsWithStatus] = useState<OrderItemWithStatus[]>(items.map(item => ({
+    ...item,
+    status: 'Not Started'
+  })));
   const formatPrice = (price: number) => {
     return `₹${price.toFixed(2)}`;
   };
 
   // Update the status of an item
   const updateItemStatus = (itemId: number, newStatus: ItemStatus) => {
-    setItemsWithStatus(prev => 
-      prev.map(item => 
-        item.id === itemId ? { ...item, status: newStatus } : item
-      )
-    );
+    setItemsWithStatus(prev => prev.map(item => item.id === itemId ? {
+      ...item,
+      status: newStatus
+    } : item));
     onStatusChange(orderId, itemId, newStatus);
   };
 
@@ -66,9 +65,7 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
         return null;
     }
   };
-
-  return (
-    <div className="py-2 px-4 bg-white rounded-md border border-gray-200 mt-2 mb-2 animate-fade-in">
+  return <div className="py-2 px-4 bg-white rounded-md border border-gray-200 mt-2 mb-2 animate-fade-in">
       <h4 className="text-sm font-medium text-coffee-green mb-2">Order Details</h4>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -81,14 +78,7 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
             </tr>
           </thead>
           <tbody>
-            {itemsWithStatus.map((item) => (
-              <tr 
-                key={item.id} 
-                className={cn(
-                  "border-b border-gray-100 last:border-0",
-                  item.status === 'Ready for Hand Over' ? "bg-green-50" : ""
-                )}
-              >
+            {itemsWithStatus.map(item => <tr key={item.id} className={cn("border-b border-gray-100 last:border-0", item.status === 'Ready for Hand Over' ? "bg-green-50" : "")}>
                 <td className="py-2 pl-1 flex items-center">
                   <span className="mr-2">{getItemIcon(item.name)}</span>
                   {item.name}
@@ -97,36 +87,23 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
                 <td className="py-2 text-center">{getStatusBadge(item.status)}</td>
                 <td className="py-2 text-right pr-1">
                   <div className="flex justify-end gap-2">
-                    <Button
-                      onClick={() => updateItemStatus(item.id, 'Started')}
-                      className="h-12 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90"
-                      disabled={item.status !== 'Not Started' && item.status !== 'Started'}
-                    >
+                    <Button onClick={() => updateItemStatus(item.id, 'Started')} disabled={item.status !== 'Not Started' && item.status !== 'Started'} className="h-12 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90 text-base">
                       <Play className="h-4 w-4 mr-1" />
                       Start Making
                     </Button>
                     
-                    <Button
-                      onClick={() => updateItemStatus(item.id, 'Finished')}
-                      className="h-12 font-medium bg-coffee-green text-white hover:bg-coffee-green/90"
-                      disabled={item.status === 'Not Started' || item.status === 'Ready for Hand Over'}
-                    >
+                    <Button onClick={() => updateItemStatus(item.id, 'Finished')} className="h-12 font-medium bg-coffee-green text-white hover:bg-coffee-green/90" disabled={item.status === 'Not Started' || item.status === 'Ready for Hand Over'}>
                       <Check className="h-4 w-4 mr-1" />
                       Finish Making
                     </Button>
                     
-                    <Button
-                      onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')}
-                      className="h-12 font-medium bg-milk-sugar text-coffee-green hover:bg-milk-sugar/90"
-                      disabled={item.status !== 'Finished' && item.status !== 'Ready for Hand Over'}
-                    >
+                    <Button onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')} className="h-12 font-medium bg-milk-sugar text-coffee-green hover:bg-milk-sugar/90" disabled={item.status !== 'Finished' && item.status !== 'Ready for Hand Over'}>
                       <ArrowRight className="h-4 w-4 mr-1" />
                       Hand Over
                     </Button>
                   </div>
                 </td>
-              </tr>
-            ))}
+              </tr>)}
           </tbody>
           <tfoot>
             <tr className="font-medium text-coffee-green">
@@ -138,8 +115,6 @@ const CustomerOrderItems = ({ items, orderId, customerName, onStatusChange }: Cu
           </tfoot>
         </table>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default CustomerOrderItems;
