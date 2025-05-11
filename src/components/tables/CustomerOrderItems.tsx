@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { OrderItem } from '@/lib/data';
 import { Button } from '@/components/ui/button';
@@ -87,19 +88,31 @@ const CustomerOrderItems = ({
                 <td className="py-2 text-center">{getStatusBadge(item.status)}</td>
                 <td className="py-2 text-right pr-1">
                   <div className="flex justify-end gap-2">
-                    <Button onClick={() => updateItemStatus(item.id, 'Started')} disabled={item.status !== 'Not Started' && item.status !== 'Started'} className="h-12 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90 text-base">
-                      <Play className="h-4 w-4 mr-1" />
-                      Start Making
+                    <Button 
+                      onClick={() => updateItemStatus(item.id, 'Started')} 
+                      disabled={item.status !== 'Not Started' && item.status !== 'Started'} 
+                      className="h-16 w-16 font-medium bg-bisi-orange text-white hover:bg-bisi-orange/90 text-sm flex flex-col"
+                    >
+                      <span>Start</span>
+                      <span>Making</span>
                     </Button>
                     
-                    <Button onClick={() => updateItemStatus(item.id, 'Finished')} className="h-12 font-medium bg-coffee-green text-white hover:bg-coffee-green/90" disabled={item.status === 'Not Started' || item.status === 'Ready for Hand Over'}>
-                      <Check className="h-4 w-4 mr-1" />
-                      Finish Making
+                    <Button 
+                      onClick={() => updateItemStatus(item.id, 'Finished')} 
+                      className="h-16 w-16 font-medium bg-coffee-green text-white hover:bg-coffee-green/90 text-sm flex flex-col" 
+                      disabled={item.status === 'Not Started' || item.status === 'Ready for Hand Over'}
+                    >
+                      <span>Finish</span>
+                      <span>Making</span>
                     </Button>
                     
-                    <Button onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')} className="h-12 font-medium bg-milk-sugar text-coffee-green hover:bg-milk-sugar/90" disabled={item.status !== 'Finished' && item.status !== 'Ready for Hand Over'}>
-                      <ArrowRight className="h-4 w-4 mr-1" />
-                      Hand Over
+                    <Button 
+                      onClick={() => updateItemStatus(item.id, 'Ready for Hand Over')} 
+                      className="h-16 w-16 font-medium bg-milk-sugar text-coffee-green hover:bg-milk-sugar/90 text-sm flex flex-col" 
+                      disabled={item.status !== 'Finished' && item.status !== 'Ready for Hand Over'}
+                    >
+                      <span>Hand</span>
+                      <span>Over</span>
                     </Button>
                   </div>
                 </td>

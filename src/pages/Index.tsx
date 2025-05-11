@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CustomerView } from '@/components/views/CustomerView';
 import { ItemView } from '@/components/views/ItemView';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import NewOrderDialog from '@/components/NewOrderDialog';
+import NewOrderFormDialog from '@/components/NewOrderFormDialog';
 
 const Index = () => {
   const { toast } = useToast();
@@ -88,7 +88,7 @@ const Index = () => {
       {/* New Order Dialog */}
       <Dialog open={isNewOrderDialogOpen} onOpenChange={setIsNewOrderDialogOpen}>
         <DialogContent className="p-0 max-w-6xl">
-          <NewOrderDialog onClose={() => setIsNewOrderDialogOpen(false)} />
+          <NewOrderFormDialog onClose={() => setIsNewOrderDialogOpen(false)} />
         </DialogContent>
       </Dialog>
     </div>
