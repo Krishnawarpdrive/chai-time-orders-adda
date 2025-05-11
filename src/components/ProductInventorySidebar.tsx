@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Package, AlertCircle } from 'lucide-react';
 import { Spinner } from "@/components/ui/spinner";
 import { useInventory, type InventoryItem } from "@/hooks/useInventory";
-import InventoryItem from "@/components/inventory/InventoryItem";
+import InventoryItemCard from "@/components/inventory/InventoryItem";
 import UpdateInventoryDialog from "@/components/inventory/UpdateInventoryDialog";
 
 const ProductInventorySidebar = () => {
@@ -45,7 +45,7 @@ const ProductInventorySidebar = () => {
 
       <div className="space-y-4">
         {inventory.map((item) => (
-          <InventoryItem 
+          <InventoryItemCard 
             key={item.id}
             item={item}
             onUpdateClick={handleUpdateInventory}
