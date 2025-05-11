@@ -204,7 +204,7 @@ const InventorySidebar = () => {
                 item={item}
                 onUpdate={handleUpdateInventory}
               />
-            )}
+            ))}
             
             {healthyStockItems.length === 0 && !loading && !error && (
               <div className="text-center py-6 text-gray-500">
