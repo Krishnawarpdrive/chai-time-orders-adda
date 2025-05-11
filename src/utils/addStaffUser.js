@@ -1,13 +1,16 @@
 
 /*
 This is a utility script to add staff users. Run it in the browser console while logged in as an admin.
-You should first create a normal user account, then run this script to promote that user to staff.
+You should first create a normal user account through the signup page, then run this script to promote that user to staff.
 
 Usage:
 1. Create a new user account through the signup page
-2. Login as an admin
-3. Open browser console and paste this script
-4. Run the function with the user's ID: promoteToStaff('user-id-here', 'staff')
+2. Open browser console and paste this script
+3. Run the function with the user's ID: promoteToStaff('user-id-here', 'staff')
+   (You can find your user ID in the console logs when logging in)
+
+Example:
+promoteToStaff('1234-5678-9012', 'staff')
 */
 
 async function promoteToStaff(userId, role = 'staff') {
@@ -46,5 +49,28 @@ async function promoteToStaff(userId, role = 'staff') {
   }
 }
 
+// For convenience, get your own user ID:
+async function getMyUserId() {
+  const { supabase } = window;
+  if (!supabase) {
+    console.error('Supabase client not found in window object');
+    return;
+  }
+  
+  const { data, error } = await supabase.auth.getUser();
+  
+  if (error) {
+    console.error('Error getting user:', error);
+    return;
+  }
+  
+  console.log('Your user ID:', data.user.id);
+  return data.user.id;
+}
+
 // Example usage:
-// promoteToStaff('user-id-here', 'staff');
+// First get your ID:
+// getMyUserId();
+//
+// Then promote yourself to staff:
+// promoteToStaff('your-user-id-here', 'staff');

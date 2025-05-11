@@ -12,6 +12,7 @@ const Signup = () => {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
 
@@ -24,9 +25,16 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signUp(email, password, firstName, lastName);
-    // Navigate to login after signup
-    navigate('/auth/login');
+    setIsLoading(true);
+    
+    try {
+      await signUp(email, password, firstName, lastName);
+      // Navigate to login after signup (handled in signUp function)
+    } catch (error) {
+      console.error('Signup error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -83,10 +91,15 @@ const Signup = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
               />
             </div>
-            <Button type="submit" className="w-full bg-coffee-green hover:bg-coffee-green/90">
-              Create Account
+            <Button 
+              type="submit" 
+              className="w-full bg-coffee-green hover:bg-coffee-green/90"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
         </CardContent>

@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Set up listener for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log('Auth state changed:', event, currentSession);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -46,6 +47,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log('Initial session check:', currentSession);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
@@ -63,6 +65,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const fetchUserRole = async (userId: string) => {
     try {
+      console.log('Fetching user role for:', userId);
       const { data, error } = await supabase.rpc('get_user_role');
       
       if (error) {
@@ -70,6 +73,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return;
       }
       
+      console.log('User role fetched:', data);
       setUserRole(data as 'customer' | 'staff' | 'admin');
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
@@ -79,20 +83,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log('Signing in with:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Sign in error:', error);
         toast({
           title: 'Login failed',
           description: error.message,
           variant: 'destructive',
         });
-        return;
+        throw error;
       }
 
+      console.log('Sign in successful:', data);
       toast({
         title: 'Welcome back!',
         description: 'You have successfully logged in.',
@@ -104,11 +111,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         redirectBasedOnRole();
       }
     } catch (error: any) {
+      console.error('Sign in exception:', error);
       toast({
         title: 'Error',
         description: error.message || 'An error occurred during login',
         variant: 'destructive',
       });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -117,6 +126,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
       setLoading(true);
+      console.log('Signing up with:', email, firstName, lastName);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -129,24 +139,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (error) {
+        console.error('Sign up error:', error);
         toast({
           title: 'Registration failed',
           description: error.message,
           variant: 'destructive',
         });
-        return;
+        throw error;
       }
 
+      console.log('Sign up successful:', data);
       toast({
         title: 'Registration successful',
         description: 'Please check your email for verification.',
       });
+      
+      navigate('/auth/login');
     } catch (error: any) {
+      console.error('Sign up exception:', error);
       toast({
         title: 'Error',
         description: error.message || 'An error occurred during registration',
         variant: 'destructive',
       });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -155,6 +171,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signOut = async () => {
     try {
       setLoading(true);
+      console.log('Signing out');
       await supabase.auth.signOut();
       navigate('/auth/login');
       toast({
@@ -162,6 +179,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         description: 'You have been successfully signed out.',
       });
     } catch (error: any) {
+      console.error('Sign out error:', error);
       toast({
         title: 'Error',
         description: error.message || 'An error occurred during sign out',
@@ -173,6 +191,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const redirectBasedOnRole = () => {
+    console.log('Redirecting based on role:', userRole);
     if (userRole === 'staff' || userRole === 'admin') {
       navigate('/'); // Staff dashboard
     } else if (userRole === 'customer') {

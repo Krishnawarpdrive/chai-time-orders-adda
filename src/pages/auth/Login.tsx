@@ -6,12 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { signIn, user, userRole } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Redirect if already logged in
@@ -26,7 +31,21 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn(email, password);
+    setIsLoading(true);
+    
+    try {
+      await signIn(email, password);
+      // No need to navigate here as the useEffect above will handle redirection
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast({
+        title: 'Login failed',
+        description: error.message || 'Please check your credentials and try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -42,6 +61,15 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <Alert className="mb-4 bg-blue-50 border-blue-200">
+            <Info className="h-4 w-4 text-blue-500" />
+            <AlertDescription className="text-sm text-blue-700">
+              <p className="font-medium">First time user?</p>
+              <p>1. Create an account using the Sign Up link below</p>
+              <p>2. For staff access, use the admin utility after registration</p>
+            </AlertDescription>
+          </Alert>
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -65,8 +93,12 @@ const Login = () => {
                 required
               />
             </div>
-            <Button type="submit" className="w-full bg-coffee-green hover:bg-coffee-green/90">
-              Login
+            <Button 
+              type="submit" 
+              className="w-full bg-coffee-green hover:bg-coffee-green/90"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
         </CardContent>
