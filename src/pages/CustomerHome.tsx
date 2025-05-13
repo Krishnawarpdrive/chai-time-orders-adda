@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, ShoppingCart, Menu, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import CoffeeCard from '@/components/CoffeeCard';
 
 // Mock data for menu items
 const menuItems = [
@@ -101,62 +102,7 @@ const CustomerHome = () => {
       {/* Menu Items */}
       <div className="px-4 pb-24">
         {menuItems.map((item) => (
-          <div 
-            key={item.id}
-            className="mb-6 border-2 border-[#e9c766] rounded-lg bg-white relative overflow-hidden"
-            style={{
-              borderTopLeftRadius: '0.5rem',
-              borderTopRightRadius: '0.5rem',
-              borderBottomLeftRadius: '0.5rem',
-              borderBottomRightRadius: '0.5rem',
-              borderStyle: 'solid',
-              borderWidth: '1px',
-              borderImage: 'repeating-linear-gradient(45deg, #e9c766, #e9c766 10px, transparent 10px, transparent 20px) 1'
-            }}
-          >
-            <div className="p-4">
-              <div className="flex justify-between mb-1">
-                <h3 className="text-2xl font-medium text-[#1e483c]">{item.name}</h3>
-                <span className="text-[#e46546] text-xl font-bold">₹{item.price}</span>
-              </div>
-              <p className="text-gray-600 mb-4">{item.description}</p>
-              
-              <div className="flex justify-between items-center">
-                {getQuantityInCart(item.id) > 0 ? (
-                  <div className="flex items-center">
-                    <button 
-                      onClick={() => decreaseQuantity(item.id)} 
-                      className="bg-[#1e483c] text-white w-12 h-12 flex items-center justify-center text-3xl"
-                    >
-                      -
-                    </button>
-                    <div className="w-16 h-12 flex items-center justify-center text-xl border border-gray-300">
-                      {getQuantityInCart(item.id)}
-                    </div>
-                    <button 
-                      onClick={() => addToCart(item.id)} 
-                      className="bg-[#1e483c] text-white w-12 h-12 flex items-center justify-center text-3xl"
-                    >
-                      +
-                    </button>
-                  </div>
-                ) : (
-                  <div></div> // Empty div for spacing
-                )}
-                <button 
-                  onClick={() => addToCart(item.id)} 
-                  className={`bg-[#e46546] text-white px-8 py-2 rounded-md text-xl ${
-                    getQuantityInCart(item.id) > 0 ? 'mt-0' : 'mt-4'
-                  }`}
-                >
-                  ADD
-                </button>
-              </div>
-            </div>
-            <div className="absolute right-4 top-16">
-              <img src={item.image} alt={item.name} className="w-36 h-36 object-cover rounded-lg" />
-            </div>
-          </div>
+          <CoffeeCard key={item.id} coffee={item} />
         ))}
       </div>
 
