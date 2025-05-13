@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Menu as MenuIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -19,6 +20,7 @@ export function Sidebar({ className }: SidebarProps) {
   const [selectedPersona, setSelectedPersona] = useState<string>("customer");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Auto-collapse sidebar on mobile
   useEffect(() => {
@@ -44,6 +46,12 @@ export function Sidebar({ className }: SidebarProps) {
     
     // Dispatch storage event to notify other components
     window.dispatchEvent(new Event('storage'));
+    
+    // Navigate to the persona's home page
+    const persona = personas.find(p => p.value === value);
+    if (persona) {
+      navigate(persona.homePath);
+    }
     
     console.log(`Switched to ${value} persona`);
   };

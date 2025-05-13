@@ -22,61 +22,61 @@ export interface NavItem {
   personas?: string[];
 }
 
-// Regular navigation items for staff, franchise, brand
+// Regular navigation items for staff, franchise, brand with prefixed routes
 export const standardNavItems: NavItem[] = [
   { 
     title: 'Orders', 
     icon: ClipboardList, 
-    path: '/',
+    path: 'orders',
     badge: 5,
     personas: ['staff', 'franchise', 'brand']
   },
   { 
     title: 'Inventory', 
     icon: DatabaseIcon, 
-    path: '/inventory',
+    path: 'inventory',
     personas: ['staff', 'franchise', 'brand']
   },
   { 
     title: 'Customers', 
     icon: Users, 
-    path: '/customers',
+    path: 'customers',
     personas: ['staff', 'franchise', 'brand']
   },
   { 
     title: 'Staff', 
     icon: StaffIcon, 
-    path: '/staff',
+    path: 'staff',
     personas: ['franchise', 'brand']
   },
   { 
     title: 'Outlets', 
     icon: MapPin, 
-    path: '/outlets',
+    path: 'outlets',
     personas: ['franchise', 'brand']
   },
   { 
     title: 'Products', 
     icon: Package, 
-    path: '/products',
+    path: 'products',
     personas: ['staff', 'franchise', 'brand']
   },
   { 
     title: 'Categories', 
     icon: Tag, 
-    path: '/categories',
+    path: 'categories',
     personas: ['staff', 'franchise', 'brand']
   },
   { 
     title: 'Offers', 
     icon: Percent, 
-    path: '/offers',
+    path: 'offers',
     personas: ['staff', 'franchise', 'brand']
   },
   { 
     title: 'Reports', 
     icon: BarChart, 
-    path: '/reports',
+    path: 'reports',
     personas: ['staff', 'franchise', 'brand']
   }
 ];
@@ -111,13 +111,18 @@ export const customerNavItems: NavItem[] = [
   },
 ];
 
-// Get active nav items based on selected persona
+// Get active nav items based on selected persona with prefixed paths
 export const getActiveNavItems = (selectedPersona: string): NavItem[] => {
   if (selectedPersona === 'customer') {
     return customerNavItems;
   }
   
-  return standardNavItems.filter(item => 
-    !item.personas || item.personas.includes(selectedPersona)
-  );
+  // Filter items based on persona and add the persona prefix to the path
+  return standardNavItems
+    .filter(item => !item.personas || item.personas.includes(selectedPersona))
+    .map(item => ({
+      ...item,
+      path: `/${selectedPersona}/${item.path}` // Add persona prefix to path
+    }));
 };
+

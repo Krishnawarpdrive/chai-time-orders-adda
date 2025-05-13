@@ -43,6 +43,19 @@ const CustomerMobileMenu: React.FC<CustomerMobileMenuProps> = ({
     navigate(path);
     onClose();
   };
+  
+  // Enhanced handler for persona changes with navigation
+  const handlePersonaChangeWithNavigation = (value: string) => {
+    // First change the persona
+    handlePersonaChange(value);
+    
+    // Find the persona's home path and navigate to it
+    const persona = personas.find(p => p.value === value);
+    if (persona) {
+      navigate(persona.homePath);
+      onClose(); // Close the menu after navigation
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-[#1e483c] text-white z-50 flex flex-col">
@@ -97,7 +110,7 @@ const CustomerMobileMenu: React.FC<CustomerMobileMenuProps> = ({
           return (
             <button
               key={persona.value}
-              onClick={() => handlePersonaChange(persona.value)}
+              onClick={() => handlePersonaChangeWithNavigation(persona.value)}
               className={`flex items-center w-full p-2 rounded-md ${
                 selectedPersona === persona.value 
                   ? 'bg-[#e9c766] text-[#1e483c]' 

@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, Users as StaffIcon, Store, Shield } from 'lucide-react';
 import {
   DropdownMenu,
@@ -23,10 +24,10 @@ interface SidebarPersonaSelectorProps {
 }
 
 export const personas = [
-  { value: "customer", label: "Customer", icon: User },
-  { value: "staff", label: "Staff", icon: StaffIcon },
-  { value: "franchise", label: "Franchise Owner", icon: Store },
-  { value: "brand", label: "Brand Owner", icon: Shield },
+  { value: "customer", label: "Customer", icon: User, homePath: "/" },
+  { value: "staff", label: "Staff", icon: StaffIcon, homePath: "/staff" },
+  { value: "franchise", label: "Franchise Owner", icon: Store, homePath: "/franchise" },
+  { value: "brand", label: "Brand Owner", icon: Shield, homePath: "/brand" },
 ];
 
 const SidebarPersonaSelector: React.FC<SidebarPersonaSelectorProps> = ({ 
@@ -35,9 +36,22 @@ const SidebarPersonaSelector: React.FC<SidebarPersonaSelectorProps> = ({
   isMobile, 
   handlePersonaChange 
 }) => {
+  const navigate = useNavigate();
+  
   // Get the current persona icon
   const currentPersona = personas.find(p => p.value === selectedPersona);
   const PersonaIcon = currentPersona ? currentPersona.icon : User;
+  
+  // Enhanced handler that also navigates to the persona's home page
+  const handlePersonaChangeWithNavigation = (value: string) => {
+    handlePersonaChange(value);
+    
+    // Find the persona's home path and navigate to it
+    const persona = personas.find(p => p.value === value);
+    if (persona) {
+      navigate(persona.homePath);
+    }
+  };
 
   // Expanded view (desktop)
   if (!collapsed && !isMobile) {
@@ -46,7 +60,7 @@ const SidebarPersonaSelector: React.FC<SidebarPersonaSelectorProps> = ({
         <Select 
           defaultValue={personas[0].value} 
           value={selectedPersona}
-          onValueChange={handlePersonaChange}
+          onValueChange={handlePersonaChangeWithNavigation}
         >
           <SelectTrigger className="w-full bg-coffee-green/50 border-coffee-green/30 text-white">
             <SelectValue placeholder="Select Persona" />
@@ -81,7 +95,7 @@ const SidebarPersonaSelector: React.FC<SidebarPersonaSelectorProps> = ({
           return (
             <DropdownMenuItem 
               key={persona.value}
-              onClick={() => handlePersonaChange(persona.value)}
+              onClick={() => handlePersonaChangeWithNavigation(persona.value)}
               className="cursor-pointer hover:bg-coffee-green/70 text-white focus:bg-coffee-green/70 focus:text-white"
             >
               <PersonaIconItem className="mr-2 h-4 w-4" />
