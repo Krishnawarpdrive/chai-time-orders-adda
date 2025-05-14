@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import ProductInventorySidebar from '@/components/ProductInventorySidebar';
 import InventoryRequestsManager from '@/components/inventory/InventoryRequestsManager';
+import InventoryTable from '@/components/inventory/InventoryTable';
 import { useLocation } from 'react-router-dom';
 
 const InventoryPage = () => {
@@ -85,17 +85,7 @@ const InventoryPage = () => {
               </TabsList>
               
               <TabsContent value="inventory">
-                <div className="relative">
-                  <div className="pr-72">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {/* This will be populated by items in the sidebar component */}
-                      <div className="col-span-full p-8 text-center text-gray-500">
-                        Select an item from the sidebar to view details
-                      </div>
-                    </div>
-                  </div>
-                  <ProductInventorySidebar />
-                </div>
+                <InventoryTable />
               </TabsContent>
               
               {isOwnerOrFranchiseRoute && (

@@ -3,25 +3,20 @@ import React from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Spinner } from "@/components/ui/spinner";
 import { type InventoryItem } from "@/hooks/useInventory";
-import InventoryItemCard from "@/components/inventory/InventoryItem";
-import InventoryCardRequest from "@/components/inventory/InventoryCardRequest";
 
 interface InventoryListProps {
   inventory: InventoryItem[];
   loading: boolean;
   error: string | null;
-  isRequestMode: boolean;
-  onUpdateClick: (item: InventoryItem) => void;
-  onAddToRequest: (item: InventoryItem, quantity: number) => void;
+  isRequestMode?: boolean;
+  onUpdateClick?: (item: InventoryItem) => void;
+  onAddToRequest?: (item: InventoryItem, quantity: number) => void;
 }
 
 const InventoryList = ({ 
   inventory, 
   loading, 
-  error, 
-  isRequestMode, 
-  onUpdateClick,
-  onAddToRequest 
+  error
 }: InventoryListProps) => {
   if (loading) {
     return (
@@ -54,18 +49,19 @@ const InventoryList = ({
   return (
     <div className="space-y-4">
       {inventory.map((item) => (
-        <div key={item.id} className="space-y-2">
-          <InventoryItemCard 
-            item={item}
-            onUpdateClick={onUpdateClick}
-            isRequestMode={isRequestMode}
-            onAddToRequest={onAddToRequest}
-          />
-          <InventoryCardRequest
-            item={item}
-            isRequestMode={isRequestMode}
-            onAddToRequest={onAddToRequest}
-          />
+        <div key={item.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <div className="font-medium text-lg">{item.name}</div>
+          <div className="text-sm text-gray-500">{item.category}</div>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <div>
+              <span className="text-xs text-gray-500">Current Stock</span>
+              <div className="font-medium">{item.quantity} {item.unit}</div>
+            </div>
+            <div>
+              <span className="text-xs text-gray-500">Reorder Level</span>
+              <div>{item.reorder_level} {item.unit}</div>
+            </div>
+          </div>
         </div>
       ))}
     </div>
