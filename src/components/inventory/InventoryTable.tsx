@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useInventory, type InventoryItem } from "@/hooks/useInventory";
 import { useToast } from "@/hooks/use-toast";
 import UpdateInventoryDialog from "@/components/inventory/UpdateInventoryDialog";
@@ -14,22 +14,38 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Edit, AlertTriangle, PlusCircle, ArrowDownToLine } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { addBusinessDays } from 'date-fns';
+import { useInventoryRequests } from '@/hooks/useInventoryRequests';
 
 const InventoryTable = () => {
   const { inventory, loading, error, updateInventoryItem } = useInventory();
+  const { fetchRequestHistory } = useInventoryRequests();
   const { toast } = useToast();
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [requestItems, setRequestItems] = useState<Array<InventoryItem & { requestQuantity: number }>>([]);
+  const [expandedHistoryRows, setExpandedHistoryRows] = useState<Record<string, boolean>>({});
+  const [historyData, setHistoryData] = useState<Record<string, any[]>>({});
+  const [historyLoading, setHistoryLoading] = useState<Record<string, boolean>>({});
+  const [staffEnteredQuantities, setStaffEnteredQuantities] = useState<Record<string, number>>({});
+  const [requestedQuantities, setRequestedQuantities] = useState<Record<string, number>>({});
 
   // Calculate estimated delivery date (2 business days from now)
   const estimatedDeliveryDate = addBusinessDays(new Date(), 2);
+
+  useEffect(() => {
+    // Initialize staff entered quantities with current inventory quantities
+    const initialStaffQuantities: Record<string, number> = {};
+    inventory.forEach(item => {
+      initialStaffQuantities[item.id] = item.quantity;
+    });
+    setStaffEnteredQuantities(initialStaffQuantities);
+  }, [inventory]);
 
   const handleUpdateInventory = (item: InventoryItem) => {
     setSelectedItem(item);
@@ -40,7 +56,41 @@ const InventoryTable = () => {
     return await updateInventoryItem(itemId, newQuantity);
   };
 
-  const handleAddToRequest = (item: InventoryItem, quantity: number) => {
+  const toggleHistory = async (itemId: string) => {
+    const isExpanded = expandedHistoryRows[itemId] || false;
+    setExpandedHistoryRows({
+      ...expandedHistoryRows,
+      [itemId]: !isExpanded
+    });
+    
+    if (!isExpanded && !historyData[itemId]) {
+      setHistoryLoading({
+        ...historyLoading,
+        [itemId]: true
+      });
+      
+      try {
+        // This would need to be modified to fetch history based on inventory item rather than a specific request
+        const history = await fetchRequestHistory(itemId);
+        setHistoryData({
+          ...historyData,
+          [itemId]: history || []
+        });
+      } catch (error) {
+        console.error("Error fetching history:", error);
+      } finally {
+        setHistoryLoading({
+          ...historyLoading,
+          [itemId]: false
+        });
+      }
+    }
+  };
+
+  const handleAddToRequest = (item: InventoryItem) => {
+    const quantity = requestedQuantities[item.id];
+    if (!quantity) return;
+    
     // Check if item already exists in request
     const existingItemIndex = requestItems.findIndex(reqItem => reqItem.id === item.id);
     
@@ -49,7 +99,7 @@ const InventoryTable = () => {
       const updatedItems = [...requestItems];
       updatedItems[existingItemIndex] = { 
         ...updatedItems[existingItemIndex], 
-        requestQuantity: updatedItems[existingItemIndex].requestQuantity + quantity 
+        requestQuantity: quantity 
       };
       setRequestItems(updatedItems);
     } else {
@@ -61,18 +111,28 @@ const InventoryTable = () => {
       title: "Added to Request",
       description: `${quantity} ${item.unit} of ${item.name} added to your request.`,
     });
-  };
-
-  const handleRequestStock = (item: InventoryItem) => {
-    setSelectedItem(item);
-    // Default request quantity can be set based on the reorder level or a fixed amount
-    const defaultQuantity = item.reorder_level * 2 - item.quantity; // Just an example calculation
-    handleAddToRequest(item, defaultQuantity > 0 ? defaultQuantity : item.reorder_level);
+    
     setIsRequestDialogOpen(true);
   };
 
   const clearRequest = () => {
     setRequestItems([]);
+  };
+
+  const handleStaffQuantityChange = (itemId: string, value: string) => {
+    const numValue = value === '' ? 0 : Number(value);
+    setStaffEnteredQuantities({
+      ...staffEnteredQuantities,
+      [itemId]: numValue
+    });
+  };
+
+  const handleRequestedQuantityChange = (itemId: string, value: string) => {
+    const numValue = value === '' ? 0 : Number(value);
+    setRequestedQuantities({
+      ...requestedQuantities,
+      [itemId]: numValue
+    });
   };
 
   // Filter items based on search query
@@ -114,100 +174,149 @@ const InventoryTable = () => {
             className="pl-10"
           />
         </div>
-        <div className="flex gap-2 items-center">
+        {requestItems.length > 0 && (
           <Button 
-            variant="outline"
-            className="flex items-center gap-2"
+            variant="default"
+            className="bg-coffee-green hover:bg-coffee-green/90"
+            onClick={() => setIsRequestDialogOpen(true)}
           >
-            <PlusCircle size={16} />
-            Add Item
+            Review Request ({requestItems.length})
           </Button>
-          {requestItems.length > 0 && (
-            <Button 
-              variant="default"
-              className="bg-coffee-green hover:bg-coffee-green/90 flex items-center gap-2"
-              onClick={() => setIsRequestDialogOpen(true)}
-            >
-              <ArrowDownToLine size={16} />
-              Review Request ({requestItems.length})
-            </Button>
-          )}
-        </div>
+        )}
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[30%]">Item Name</TableHead>
-            <TableHead className="w-[15%]">Category</TableHead>
-            <TableHead className="w-[15%] text-center">Current Stock</TableHead>
-            <TableHead className="w-[15%] text-center">Reorder Level</TableHead>
-            <TableHead className="w-[15%] text-right">Price</TableHead>
-            <TableHead className="w-[10%] text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredItems.length === 0 ? (
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className="h-32 text-center">
-                No inventory items found
-              </TableCell>
+              <TableHead className="w-[12%]">Raw Material ID</TableHead>
+              <TableHead className="w-[18%]">Raw Material Name</TableHead>
+              <TableHead className="w-[12%] text-center">Stock Overview</TableHead>
+              <TableHead className="w-[15%] text-center">Staff Entered Stock</TableHead>
+              <TableHead className="w-[15%] text-center">Quantity Required</TableHead>
+              <TableHead className="w-[12%] text-center">Request Action</TableHead>
+              <TableHead className="w-[12%] text-center">Order History</TableHead>
             </TableRow>
-          ) : (
-            filteredItems.map((item) => {
-              // Determine if stock is low (at or below reorder level)
-              const isLowStock = item.quantity <= item.reorder_level;
-              
-              return (
-                <TableRow key={item.id} className="hover:bg-gray-50">
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-gray-50 text-gray-700">
-                      {item.category || 'Uncategorized'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className={`font-medium ${
-                      isLowStock 
-                        ? 'text-red-500' 
-                        : item.quantity <= item.reorder_level * 1.5 
-                          ? 'text-amber-500' 
-                          : 'text-green-500'
-                    }`}>
-                      {item.quantity} {item.unit}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {item.reorder_level} {item.unit}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    ₹{item.price_per_unit.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => handleUpdateInventory(item)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    {isLowStock && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="h-8"
-                        onClick={() => handleRequestStock(item)}
-                      >
-                        Request
-                      </Button>
+          </TableHeader>
+          <TableBody>
+            {filteredItems.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-32 text-center">
+                  No inventory items found
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredItems.map((item) => {
+                // Determine if stock is low (at or below reorder level)
+                const isLowStock = item.quantity <= item.reorder_level;
+                const isExpanded = expandedHistoryRows[item.id] || false;
+                
+                return (
+                  <React.Fragment key={item.id}>
+                    <TableRow className="hover:bg-gray-50">
+                      <TableCell>
+                        <Badge variant="outline" className="bg-gray-50 text-gray-700 font-mono">
+                          {item.id.substring(0, 6).toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="text-center">
+                        <span className={`font-medium ${
+                          isLowStock 
+                            ? 'text-red-500' 
+                            : item.quantity <= item.reorder_level * 1.5 
+                              ? 'text-amber-500' 
+                              : 'text-green-500'
+                        }`}>
+                          {item.quantity} {item.unit}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={staffEnteredQuantities[item.id] || ''}
+                          onChange={(e) => handleStaffQuantityChange(item.id, e.target.value)}
+                          className="h-9 text-center"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={requestedQuantities[item.id] || ''}
+                          onChange={(e) => handleRequestedQuantityChange(item.id, e.target.value)}
+                          className="h-9 text-center"
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={!requestedQuantities[item.id]}
+                          onClick={() => handleAddToRequest(item)}
+                          className={`h-9 w-full ${isLowStock ? 'border-red-200 text-red-600 hover:bg-red-50' : ''}`}
+                        >
+                          Request
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleHistory(item.id)}
+                          className="h-9 w-full"
+                        >
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4 mx-auto" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 mx-auto" />
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    
+                    {isExpanded && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="bg-gray-50 py-2 px-4">
+                          {historyLoading[item.id] ? (
+                            <div className="text-center py-4">
+                              <div className="inline-block animate-spin h-4 w-4 border-2 border-coffee-green border-t-transparent rounded-full mr-2"></div>
+                              <span className="text-sm text-gray-500">Loading history...</span>
+                            </div>
+                          ) : historyData[item.id]?.length > 0 ? (
+                            <div className="text-sm">
+                              <h4 className="font-medium mb-2">Request History</h4>
+                              <div className="grid grid-cols-4 gap-4 text-xs text-gray-600">
+                                <div className="font-medium">Date</div>
+                                <div className="font-medium">Previous Status</div>
+                                <div className="font-medium">New Status</div>
+                                <div className="font-medium">Notes</div>
+                                
+                                {historyData[item.id].map((history, idx) => (
+                                  <React.Fragment key={idx}>
+                                    <div>
+                                      {new Date(history.created_at).toLocaleDateString()}
+                                    </div>
+                                    <div>{history.previous_status}</div>
+                                    <div>{history.new_status}</div>
+                                    <div>{history.notes || '-'}</div>
+                                  </React.Fragment>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500 py-2">No order history found.</p>
+                          )}
+                        </TableCell>
+                      </TableRow>
                     )}
-                  </TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
+                  </React.Fragment>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <UpdateInventoryDialog 
         isOpen={isDialogOpen}
