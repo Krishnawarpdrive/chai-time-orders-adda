@@ -1,27 +1,25 @@
 
-import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Calendar, Package, ShoppingBag } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { type InventoryItem } from "@/hooks/useInventory";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { useInventoryRequests } from '@/hooks/useInventoryRequests';
+import { format } from 'date-fns';
 
-interface InventoryRequestItem extends InventoryItem {
+interface RequestItemWithQuantity {
+  id: string;
+  name: string;
+  quantity: number;
   requestQuantity: number;
+  unit: string;
 }
 
-export interface InventoryRequestDialogProps {
+interface InventoryRequestDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  requestItems: InventoryRequestItem[];
+  requestItems: Array<RequestItemWithQuantity>;
   onClearRequest: () => void;
   estimatedDeliveryDate: string;
 }
@@ -33,93 +31,120 @@ const InventoryRequestDialog = ({
   onClearRequest,
   estimatedDeliveryDate,
 }: InventoryRequestDialogProps) => {
+  const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  
-  const handleConfirmRequest = () => {
-    // In a real application, this would submit the request to a backend
-    toast({
-      title: "Request Submitted",
-      description: `Your inventory request with ${requestItems.length} items has been submitted.`,
-    });
-    onOpenChange(false);
-    onClearRequest();
+  const { createInventoryRequest } = useInventoryRequests();
+
+  const handleSubmitRequest = async () => {
+    setIsSubmitting(true);
+    try {
+      // Create a separate inventory request for each item
+      for (const item of requestItems) {
+        await createInventoryRequest(
+          item.id, 
+          item.quantity, 
+          item.requestQuantity,
+          notes
+        );
+      }
+      
+      toast({
+        title: "Request Submitted",
+        description: `${requestItems.length} item${requestItems.length !== 1 ? 's' : ''} requested successfully.`,
+      });
+      
+      onClearRequest();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error submitting inventory requests:', error);
+      toast({
+        title: "Request Failed",
+        description: "There was an error submitting your inventory requests.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const calculateTotalCost = () => {
-    return requestItems.reduce((total, item) => {
-      return total + (item.requestQuantity * item.price_per_unit);
-    }, 0).toFixed(2);
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'EEEE, MMMM d');
+    } catch (e) {
+      return 'Unknown date';
+    }
   };
 
-  // Calculate total items
-  const totalItems = requestItems.reduce((total, item) => {
-    return total + item.requestQuantity;
-  }, 0);
+  const totalItems = requestItems.reduce((sum, item) => sum + item.requestQuantity, 0);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-coffee-green">
-            <ShoppingBag size={18} />
-            Confirm Inventory Request
-          </DialogTitle>
-          <DialogDescription>
-            Review your inventory request before submitting.
-          </DialogDescription>
+          <DialogTitle className="text-xl font-bold text-coffee-green">Inventory Request</DialogTitle>
         </DialogHeader>
-        
-        <div className="py-2">
-          <div className="flex items-center gap-2 text-sm mb-3 bg-milk-sugar/50 p-2 rounded">
-            <Calendar size={16} className="text-coffee-green" />
-            <span>Estimated delivery: <span className="font-semibold">{estimatedDeliveryDate}</span></span>
+
+        <div className="py-4">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <p className="text-sm font-medium">Items to Request: {requestItems.length}</p>
+              <p className="text-sm text-gray-500">Total Quantity: {totalItems} units</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500">Estimated Delivery</p>
+              <p className="text-sm font-medium text-coffee-green">{formatDate(estimatedDeliveryDate)}</p>
+            </div>
           </div>
-          
-          {requestItems.length > 0 ? (
-            <>
-              <ScrollArea className="max-h-60">
-                <div className="space-y-3">
-                  {requestItems.map((item) => (
-                    <div key={item.id} className="flex justify-between border-b border-gray-100 pb-2">
-                      <div>
-                        <p className="font-medium text-sm">{item.name}</p>
-                        <p className="text-xs text-gray-500">₹{item.price_per_unit} per {item.unit}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-sm">{item.requestQuantity} {item.unit}</p>
-                        <p className="text-xs text-gray-500">₹{(item.requestQuantity * item.price_per_unit).toFixed(2)}</p>
-                      </div>
-                    </div>
-                  ))}
+
+          <ScrollArea className="h-[200px] rounded-md border p-4 mb-4">
+            {requestItems.map((item) => (
+              <div key={item.id} className="flex justify-between items-center py-2 border-b last:border-0">
+                <div>
+                  <p className="font-medium">{item.name}</p>
+                  <p className="text-xs text-gray-500">Current: {item.quantity} {item.unit}</p>
                 </div>
-              </ScrollArea>
-              
-              <div className="border-t border-gray-200 mt-4 pt-3 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Total Items:</span>
-                  <span className="font-medium">{totalItems} items</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Total Cost:</span>
-                  <span className="font-semibold text-coffee-green">₹{calculateTotalCost()}</span>
+                <div className="text-right">
+                  <p className="font-medium">{item.requestQuantity} {item.unit}</p>
+                  <p className="text-xs text-gray-500">Requested</p>
                 </div>
               </div>
-            </>
-          ) : (
-            <p className="text-center py-6 text-gray-500">No items in your request</p>
-          )}
+            ))}
+          </ScrollArea>
+
+          <div className="mb-4">
+            <label className="text-sm font-medium mb-1 block">Notes (Optional)</label>
+            <Textarea
+              placeholder="Add any notes about this inventory request..."
+              className="min-h-[100px]"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
         </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button 
-            disabled={requestItems.length === 0}
-            onClick={handleConfirmRequest}
-            className="bg-coffee-green hover:bg-coffee-green/90"
+
+        <DialogFooter className="flex justify-between items-center">
+          <Button
+            variant="outline"
+            onClick={onClearRequest}
           >
-            <Package size={16} className="mr-2" />
-            Confirm Request
+            Clear Items
           </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitRequest}
+              disabled={isSubmitting || requestItems.length === 0}
+              className="bg-coffee-green hover:bg-coffee-green/90"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Request'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -41,8 +41,10 @@ export type Database = {
       }
       inventory: {
         Row: {
+          category: string | null
           created_at: string
           id: string
+          last_restocked: string | null
           name: string
           price_per_unit: number
           quantity: number
@@ -51,8 +53,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           id?: string
+          last_restocked?: string | null
           name: string
           price_per_unit?: number
           quantity?: number
@@ -61,8 +65,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           id?: string
+          last_restocked?: string | null
           name?: string
           price_per_unit?: number
           quantity?: number
@@ -71,6 +77,94 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      inventory_request_history: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_request_id: string
+          new_status: string
+          notes: string | null
+          previous_status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_request_id: string
+          new_status: string
+          notes?: string | null
+          previous_status: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_request_id?: string
+          new_status?: string
+          notes?: string | null
+          previous_status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_request_history_inventory_request_id_fkey"
+            columns: ["inventory_request_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by_user_id: string | null
+          created_at: string
+          id: string
+          inventory_item_id: string
+          notes: string | null
+          rejected_reason: string | null
+          requested_quantity: number
+          staff_entered_quantity: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by_user_id?: string | null
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          notes?: string | null
+          rejected_reason?: string | null
+          requested_quantity: number
+          staff_entered_quantity: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by_user_id?: string | null
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          notes?: string | null
+          rejected_reason?: string | null
+          requested_quantity?: number
+          staff_entered_quantity?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_requests_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       menu_items: {
         Row: {

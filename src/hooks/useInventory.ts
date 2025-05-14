@@ -10,8 +10,8 @@ export interface InventoryItem {
   reorder_level: number;
   price_per_unit: number;
   unit: string;
-  category?: string; // For categorizing inventory (e.g., Beverages, Supplies)
-  last_restocked?: string; // Date when inventory was last updated
+  category?: string;
+  last_restocked?: string;
 }
 
 export const useInventory = () => {
@@ -23,6 +23,22 @@ export const useInventory = () => {
   // Fetch inventory data
   useEffect(() => {
     fetchInventory();
+    
+    // Subscribe to realtime changes on the inventory table
+    const channel = supabase
+      .channel('inventory_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'inventory' },
+        (payload) => {
+          fetchInventory();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchInventory = async () => {
@@ -60,7 +76,7 @@ export const useInventory = () => {
       // Update local state
       setInventory(inventory.map(item => 
         item.id === itemId 
-          ? { ...item, quantity: newQuantity } 
+          ? { ...item, quantity: newQuantity, last_restocked: new Date().toISOString() } 
           : item
       ));
 
@@ -97,12 +113,50 @@ export const useInventory = () => {
     return categories;
   };
 
+  // Get low stock items (below or at reorder level)
+  const getLowStockItems = () => {
+    return inventory.filter(item => item.quantity <= item.reorder_level);
+  };
+  
+  // Create a new inventory item
+  const createInventoryItem = async (item: Omit<InventoryItem, 'id'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('inventory')
+        .insert({
+          ...item,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select();
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Item Created",
+        description: `Successfully added ${item.name} to inventory.`,
+      });
+      
+      return data[0] as InventoryItem;
+    } catch (err: any) {
+      console.error('Error creating inventory item:', err);
+      toast({
+        title: "Creation Failed",
+        description: err.message || "Failed to create inventory item.",
+        variant: "destructive"
+      });
+      throw err;
+    }
+  };
+
   return {
     inventory,
     loading,
     error,
     updateInventoryItem,
     getInventoryByCategory,
+    getLowStockItems,
+    createInventoryItem,
     refreshInventory: fetchInventory
   };
 };
