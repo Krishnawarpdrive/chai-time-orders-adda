@@ -17,8 +17,9 @@ import { Input } from '@/components/ui/input';
 import { Search, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { addBusinessDays } from 'date-fns';
+import { addBusinessDays, format } from 'date-fns';
 import { useInventoryRequests } from '@/hooks/useInventoryRequests';
+import { Textarea } from '@/components/ui/textarea';
 
 const InventoryTable = () => {
   const { inventory, loading, error, updateInventoryItem } = useInventory();
@@ -28,13 +29,15 @@ const InventoryTable = () => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [requestItems, setRequestItems] = useState<Array<InventoryItem & { requestQuantity: number }>>([]);
+  const [requestItems, setRequestItems] = useState<Array<InventoryItem & { requestQuantity: number; notes?: string }>>([]);
   const [expandedHistoryRows, setExpandedHistoryRows] = useState<Record<string, boolean>>({});
   const [historyData, setHistoryData] = useState<Record<string, any[]>>({});
   const [historyLoading, setHistoryLoading] = useState<Record<string, boolean>>({});
   const [staffEnteredQuantities, setStaffEnteredQuantities] = useState<Record<string, number>>({});
   const [requestedQuantities, setRequestedQuantities] = useState<Record<string, number>>({});
-
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
+  const [isRequestMode, setIsRequestMode] = useState<boolean>(false);
+  
   // Calculate estimated delivery date (2 business days from now)
   const estimatedDeliveryDate = addBusinessDays(new Date(), 2);
 
@@ -89,6 +92,8 @@ const InventoryTable = () => {
 
   const handleAddToRequest = (item: InventoryItem) => {
     const quantity = requestedQuantities[item.id];
+    const notes = itemNotes[item.id];
+    
     if (!quantity) return;
     
     // Check if item already exists in request
@@ -99,12 +104,13 @@ const InventoryTable = () => {
       const updatedItems = [...requestItems];
       updatedItems[existingItemIndex] = { 
         ...updatedItems[existingItemIndex], 
-        requestQuantity: quantity 
+        requestQuantity: quantity,
+        notes: notes
       };
       setRequestItems(updatedItems);
     } else {
       // Add new item to request
-      setRequestItems([...requestItems, { ...item, requestQuantity: quantity }]);
+      setRequestItems([...requestItems, { ...item, requestQuantity: quantity, notes }]);
     }
     
     toast({
@@ -112,7 +118,16 @@ const InventoryTable = () => {
       description: `${quantity} ${item.unit} of ${item.name} added to your request.`,
     });
     
-    setIsRequestDialogOpen(true);
+    // Reset the request mode and form fields
+    setIsRequestMode(false);
+    setRequestedQuantities({
+      ...requestedQuantities,
+      [item.id]: 0
+    });
+    setItemNotes({
+      ...itemNotes,
+      [item.id]: ''
+    });
   };
 
   const clearRequest = () => {
@@ -133,6 +148,21 @@ const InventoryTable = () => {
       ...requestedQuantities,
       [itemId]: numValue
     });
+  };
+
+  const handleNotesChange = (itemId: string, value: string) => {
+    setItemNotes({
+      ...itemNotes,
+      [itemId]: value
+    });
+  };
+
+  const toggleRequestMode = () => {
+    setIsRequestMode(!isRequestMode);
+  };
+
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), 'dd MMM yyyy');
   };
 
   // Filter items based on search query
@@ -174,15 +204,25 @@ const InventoryTable = () => {
             className="pl-10"
           />
         </div>
-        {requestItems.length > 0 && (
+        <div className="flex items-center gap-3">
           <Button 
-            variant="default"
-            className="bg-coffee-green hover:bg-coffee-green/90"
-            onClick={() => setIsRequestDialogOpen(true)}
+            variant="outline"
+            onClick={toggleRequestMode}
+            className={isRequestMode ? "bg-gray-100" : ""}
           >
-            Review Request ({requestItems.length})
+            {isRequestMode ? "Cancel Request" : "Request Stock"}
           </Button>
-        )}
+          
+          {requestItems.length > 0 && (
+            <Button 
+              variant="default"
+              className="bg-coffee-green hover:bg-coffee-green/90"
+              onClick={() => setIsRequestDialogOpen(true)}
+            >
+              Review Request ({requestItems.length})
+            </Button>
+          )}
+        </div>
       </div>
       <div className="overflow-x-auto">
         <Table>
@@ -190,17 +230,22 @@ const InventoryTable = () => {
             <TableRow>
               <TableHead className="w-[12%]">Raw Material ID</TableHead>
               <TableHead className="w-[18%]">Raw Material Name</TableHead>
-              <TableHead className="w-[12%] text-center">Stock Overview</TableHead>
-              <TableHead className="w-[15%] text-center">Staff Entered Stock</TableHead>
-              <TableHead className="w-[15%] text-center">Quantity Required</TableHead>
-              <TableHead className="w-[12%] text-center">Request Action</TableHead>
-              <TableHead className="w-[12%] text-center">Order History</TableHead>
+              <TableHead className="w-[15%] text-center">System Stock</TableHead>
+              <TableHead className="w-[15%] text-center">Actual Stock</TableHead>
+              {isRequestMode && (
+                <>
+                  <TableHead className="w-[15%] text-center">Order Quantity</TableHead>
+                  <TableHead className="w-[20%]">Notes</TableHead>
+                </>
+              )}
+              <TableHead className="w-[15%] text-center">Action</TableHead>
+              <TableHead className="w-[10%] text-center">History</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center">
+                <TableCell colSpan={isRequestMode ? 7 : 5} className="h-32 text-center">
                   No inventory items found
                 </TableCell>
               </TableRow>
@@ -209,10 +254,11 @@ const InventoryTable = () => {
                 // Determine if stock is low (at or below reorder level)
                 const isLowStock = item.quantity <= item.reorder_level;
                 const isExpanded = expandedHistoryRows[item.id] || false;
+                const isRequesting = requestedQuantities[item.id] > 0;
                 
                 return (
                   <React.Fragment key={item.id}>
-                    <TableRow className="hover:bg-gray-50">
+                    <TableRow className={isRequesting ? "bg-amber-50" : "hover:bg-gray-50"}>
                       <TableCell>
                         <Badge variant="outline" className="bg-gray-50 text-gray-700 font-mono">
                           {item.id.substring(0, 6).toUpperCase()}
@@ -239,25 +285,48 @@ const InventoryTable = () => {
                           className="h-9 text-center"
                         />
                       </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={requestedQuantities[item.id] || ''}
-                          onChange={(e) => handleRequestedQuantityChange(item.id, e.target.value)}
-                          className="h-9 text-center"
-                        />
-                      </TableCell>
+                      {isRequestMode && (
+                        <>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={requestedQuantities[item.id] || ''}
+                              onChange={(e) => handleRequestedQuantityChange(item.id, e.target.value)}
+                              className="h-9 text-center"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Textarea
+                              placeholder="Add notes..."
+                              value={itemNotes[item.id] || ''}
+                              onChange={(e) => handleNotesChange(item.id, e.target.value)}
+                              className="h-14 text-sm"
+                            />
+                          </TableCell>
+                        </>
+                      )}
                       <TableCell className="text-center">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={!requestedQuantities[item.id]}
-                          onClick={() => handleAddToRequest(item)}
-                          className={`h-9 w-full ${isLowStock ? 'border-red-200 text-red-600 hover:bg-red-50' : ''}`}
-                        >
-                          Request
-                        </Button>
+                        {isRequestMode ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={!requestedQuantities[item.id]}
+                            onClick={() => handleAddToRequest(item)}
+                            className={`h-9 w-full ${isLowStock ? 'border-red-200 text-red-600 hover:bg-red-50' : ''}`}
+                          >
+                            Submit Request
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUpdateInventory(item)}
+                            className="h-9 w-full"
+                          >
+                            Update
+                          </Button>
+                        )}
                       </TableCell>
                       <TableCell className="text-center">
                         <Button
@@ -277,7 +346,7 @@ const InventoryTable = () => {
                     
                     {isExpanded && (
                       <TableRow>
-                        <TableCell colSpan={7} className="bg-gray-50 py-2 px-4">
+                        <TableCell colSpan={isRequestMode ? 7 : 5} className="bg-gray-50 py-2 px-4">
                           {historyLoading[item.id] ? (
                             <div className="text-center py-4">
                               <div className="inline-block animate-spin h-4 w-4 border-2 border-coffee-green border-t-transparent rounded-full mr-2"></div>
@@ -295,7 +364,7 @@ const InventoryTable = () => {
                                 {historyData[item.id].map((history, idx) => (
                                   <React.Fragment key={idx}>
                                     <div>
-                                      {new Date(history.created_at).toLocaleDateString()}
+                                      {formatDate(history.created_at)}
                                     </div>
                                     <div>{history.previous_status}</div>
                                     <div>{history.new_status}</div>

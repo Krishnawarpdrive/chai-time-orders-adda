@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { format } from 'date-fns';
 
 export interface InventoryRequest {
   id: string;
@@ -40,6 +41,11 @@ export const useInventoryRequests = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Format date according to our standard format
+  const formatDateString = (dateString: string) => {
+    return format(new Date(dateString), 'dd MMM yyyy');
+  };
 
   // Fetch all inventory requests with inventory item details
   useEffect(() => {
@@ -248,6 +254,7 @@ export const useInventoryRequests = () => {
     createInventoryRequest,
     updateRequestStatus,
     fetchRequestHistory,
-    refreshRequests: fetchInventoryRequests
+    refreshRequests: fetchInventoryRequests,
+    formatDateString
   };
 };

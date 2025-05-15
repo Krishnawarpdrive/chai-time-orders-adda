@@ -75,12 +75,20 @@ const InventoryPage = () => {
                   Inventory Items
                 </TabsTrigger>
                 {isOwnerOrFranchiseRoute && (
-                  <TabsTrigger 
-                    value="requests" 
-                    className="data-[state=active]:bg-coffee-green data-[state=active]:text-white"
-                  >
-                    Request Management
-                  </TabsTrigger>
+                  <>
+                    <TabsTrigger 
+                      value="requests" 
+                      className="data-[state=active]:bg-coffee-green data-[state=active]:text-white"
+                    >
+                      Request Management
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="history" 
+                      className="data-[state=active]:bg-coffee-green data-[state=active]:text-white"
+                    >
+                      Order History
+                    </TabsTrigger>
+                  </>
                 )}
               </TabsList>
               
@@ -89,9 +97,18 @@ const InventoryPage = () => {
               </TabsContent>
               
               {isOwnerOrFranchiseRoute && (
-                <TabsContent value="requests">
-                  <InventoryRequestsManager />
-                </TabsContent>
+                <>
+                  <TabsContent value="requests">
+                    <InventoryRequestsManager />
+                  </TabsContent>
+                  <TabsContent value="history">
+                    <div className="bg-white shadow rounded-lg p-6">
+                      <h3 className="text-lg font-medium mb-4">Order History</h3>
+                      <p className="text-gray-500">View all previous order history and status updates.</p>
+                      {/* Order history component would go here */}
+                    </div>
+                  </TabsContent>
+                </>
               )}
             </Tabs>
           </div>
