@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import InventoryRequestsManager from '@/components/inventory/InventoryRequestsManager';
 import InventoryTable from '@/components/inventory/InventoryTable';
 import { useLocation } from 'react-router-dom';
+import OrderDetails from '@/components/inventory/OrderDetails';
 
 const InventoryPage = () => {
   const { toast } = useToast();
@@ -74,6 +75,12 @@ const InventoryPage = () => {
                 >
                   Inventory Items
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="orderDetails" 
+                  className="data-[state=active]:bg-coffee-green data-[state=active]:text-white"
+                >
+                  Order Details
+                </TabsTrigger>
                 {isOwnerOrFranchiseRoute && (
                   <>
                     <TabsTrigger 
@@ -94,6 +101,10 @@ const InventoryPage = () => {
               
               <TabsContent value="inventory">
                 <InventoryTable />
+              </TabsContent>
+              
+              <TabsContent value="orderDetails">
+                <OrderDetails />
               </TabsContent>
               
               {isOwnerOrFranchiseRoute && (

@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, AlertTriangle, Bell } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { addBusinessDays, format } from 'date-fns';
@@ -37,6 +37,7 @@ const InventoryTable = () => {
   const [requestedQuantities, setRequestedQuantities] = useState<Record<string, number>>({});
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [isRequestMode, setIsRequestMode] = useState<boolean>(false);
+  const [lastUpdatedItems, setLastUpdatedItems] = useState<Record<string, string>>({});
   
   // Calculate estimated delivery date (2 business days from now)
   const estimatedDeliveryDate = addBusinessDays(new Date(), 2);
@@ -48,6 +49,21 @@ const InventoryTable = () => {
       initialStaffQuantities[item.id] = item.quantity;
     });
     setStaffEnteredQuantities(initialStaffQuantities);
+
+    // Check if items were updated today to disable the update button
+    const today = new Date().toDateString();
+    const updatedToday: Record<string, string> = {};
+
+    inventory.forEach(item => {
+      if (item.last_restocked) {
+        const restockDate = new Date(item.last_restocked).toDateString();
+        if (restockDate === today) {
+          updatedToday[item.id] = restockDate;
+        }
+      }
+    });
+    
+    setLastUpdatedItems(updatedToday);
   }, [inventory]);
 
   const handleUpdateInventory = (item: InventoryItem) => {
@@ -56,7 +72,15 @@ const InventoryTable = () => {
   };
 
   const handleConfirmUpdate = async (itemId: string, newQuantity: number) => {
-    return await updateInventoryItem(itemId, newQuantity);
+    const result = await updateInventoryItem(itemId, newQuantity);
+    if (result) {
+      // Update last updated items to disable button after successful update
+      setLastUpdatedItems(prev => ({
+        ...prev,
+        [itemId]: new Date().toDateString()
+      }));
+    }
+    return result;
   };
 
   const toggleHistory = async (itemId: string) => {
@@ -157,12 +181,25 @@ const InventoryTable = () => {
     });
   };
 
-  const toggleRequestMode = () => {
-    setIsRequestMode(!isRequestMode);
+  const toggleRequestMode = (itemId: string) => {
+    if (requestedQuantities[itemId]) {
+      // Already in request mode for this item, submit the request
+      handleAddToRequest(inventory.find(item => item.id === itemId)!);
+    } else {
+      // Toggle request mode for this item
+      setRequestedQuantities({
+        ...requestedQuantities,
+        [itemId]: requestedQuantities[itemId] ? 0 : 1
+      });
+    }
   };
 
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'dd MMM yyyy');
+    try {
+      return format(new Date(dateString), 'dd MMM yyyy');
+    } catch (error) {
+      return 'Invalid date';
+    }
   };
 
   // Filter items based on search query
@@ -170,6 +207,18 @@ const InventoryTable = () => {
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (item.category && item.category.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  // Check if there are items that need restocking
+  const needsRestockCount = inventory.filter(item => 
+    item.quantity <= item.reorder_level || 
+    (staffEnteredQuantities[item.id] && staffEnteredQuantities[item.id] <= item.reorder_level)
+  ).length;
+
+  // Check if there's a discrepancy between system and actual stock
+  const hasDiscrepancy = (item: InventoryItem): boolean => {
+    return staffEnteredQuantities[item.id] !== undefined && 
+           item.quantity !== staffEnteredQuantities[item.id];
+  };
 
   if (loading) {
     return (
@@ -206,22 +255,16 @@ const InventoryTable = () => {
         </div>
         <div className="flex items-center gap-3">
           <Button 
-            variant="outline"
-            onClick={toggleRequestMode}
-            className={isRequestMode ? "bg-gray-100" : ""}
+            variant="default"
+            className="bg-coffee-green hover:bg-coffee-green/90 relative"
           >
-            {isRequestMode ? "Cancel Request" : "Request Stock"}
+            Request Stock
+            {needsRestockCount > 0 && (
+              <Badge className="absolute -top-2 -right-2 bg-red-500 text-white">
+                {needsRestockCount}
+              </Badge>
+            )}
           </Button>
-          
-          {requestItems.length > 0 && (
-            <Button 
-              variant="default"
-              className="bg-coffee-green hover:bg-coffee-green/90"
-              onClick={() => setIsRequestDialogOpen(true)}
-            >
-              Review Request ({requestItems.length})
-            </Button>
-          )}
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -253,12 +296,25 @@ const InventoryTable = () => {
               filteredItems.map((item) => {
                 // Determine if stock is low (at or below reorder level)
                 const isLowStock = item.quantity <= item.reorder_level;
+                const isActualStockLow = staffEnteredQuantities[item.id] && 
+                                        staffEnteredQuantities[item.id] <= item.reorder_level;
                 const isExpanded = expandedHistoryRows[item.id] || false;
                 const isRequesting = requestedQuantities[item.id] > 0;
+                const updatedToday = lastUpdatedItems[item.id] === new Date().toDateString();
+                const actualStockEntered = staffEnteredQuantities[item.id] !== item.quantity;
+                const showDiscrepancyHighlight = hasDiscrepancy(item);
                 
                 return (
                   <React.Fragment key={item.id}>
-                    <TableRow className={isRequesting ? "bg-amber-50" : "hover:bg-gray-50"}>
+                    <TableRow className={
+                      isRequesting 
+                        ? "bg-amber-50" 
+                        : showDiscrepancyHighlight 
+                          ? "bg-blue-50"
+                          : isLowStock || isActualStockLow
+                            ? "bg-red-50"
+                            : "hover:bg-gray-50"}
+                    >
                       <TableCell>
                         <Badge variant="outline" className="bg-gray-50 text-gray-700 font-mono">
                           {item.id.substring(0, 6).toUpperCase()}
@@ -285,7 +341,7 @@ const InventoryTable = () => {
                           className="h-9 text-center"
                         />
                       </TableCell>
-                      {isRequestMode && (
+                      {isRequesting && (
                         <>
                           <TableCell>
                             <Input
@@ -307,7 +363,7 @@ const InventoryTable = () => {
                         </>
                       )}
                       <TableCell className="text-center">
-                        {isRequestMode ? (
+                        {isRequesting ? (
                           <Button
                             variant="outline"
                             size="sm"
@@ -318,14 +374,28 @@ const InventoryTable = () => {
                             Submit Request
                           </Button>
                         ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleUpdateInventory(item)}
-                            className="h-9 w-full"
-                          >
-                            Update
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={!actualStockEntered || updatedToday}
+                              onClick={() => handleUpdateInventory(item)}
+                              className="h-9 flex-1"
+                            >
+                              Update
+                            </Button>
+                            {(isLowStock || isActualStockLow) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toggleRequestMode(item.id)}
+                                className="h-9 flex-none border-red-200 text-red-600 hover:bg-red-50 relative"
+                              >
+                                <Bell className="h-4 w-4" />
+                                <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </TableCell>
                       <TableCell className="text-center">
@@ -346,7 +416,7 @@ const InventoryTable = () => {
                     
                     {isExpanded && (
                       <TableRow>
-                        <TableCell colSpan={isRequestMode ? 7 : 5} className="bg-gray-50 py-2 px-4">
+                        <TableCell colSpan={isRequesting ? 7 : 5} className="bg-gray-50 py-2 px-4">
                           {historyLoading[item.id] ? (
                             <div className="text-center py-4">
                               <div className="inline-block animate-spin h-4 w-4 border-2 border-coffee-green border-t-transparent rounded-full mr-2"></div>
