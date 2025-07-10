@@ -34,6 +34,15 @@ export interface OperationalData {
   completionRate: number;
   pendingOrders: number;
   peakHours: string[];
+  staffPerformance?: StaffPerformanceData[];
+}
+
+export interface StaffPerformanceData {
+  staffId: string;
+  staffName: string;
+  ordersCompleted: number;
+  averagePreparationTime: number;
+  efficiency: number;
 }
 
 export interface CustomerFeedbackData {
@@ -46,7 +55,7 @@ export interface CustomerFeedbackData {
 }
 
 class AnalyticsService {
-  async getSalesData(dateRange: { from: Date; to: Date }, productFilter?: string): Promise<SalesData> {
+  async getSalesData(dateRange: { from: Date; to: Date }, productFilter?: string, staffFilter?: string): Promise<SalesData> {
     try {
       // Fetch orders with items
       const { data: orders, error: ordersError } = await supabase
@@ -64,14 +73,20 @@ class AnalyticsService {
 
       if (ordersError) throw ordersError;
 
-      // Filter by product if specified
+      // Filter by product and staff if specified
       let filteredOrders = orders || [];
       if (productFilter && productFilter !== 'all') {
-        filteredOrders = orders?.filter(order => 
+        filteredOrders = filteredOrders.filter(order => 
           order.order_items?.some(item => 
             item.menu_items?.category === productFilter
           )
-        ) || [];
+        );
+      }
+      
+      if (staffFilter && staffFilter !== 'all') {
+        filteredOrders = filteredOrders.filter(order => 
+          order.user_id === staffFilter
+        );
       }
 
       const totalRevenue = filteredOrders.reduce((sum, order) => sum + Number(order.amount), 0);
@@ -148,7 +163,7 @@ class AnalyticsService {
     }
   }
 
-  async getOperationalData(dateRange: { from: Date; to: Date }): Promise<OperationalData> {
+  async getOperationalData(dateRange: { from: Date; to: Date }, staffFilter?: string): Promise<OperationalData> {
     try {
       const { data: orders, error } = await supabase
         .from('orders')
@@ -181,11 +196,36 @@ class AnalyticsService {
         .slice(0, 3)
         .map(([hour]) => `${hour.toString().padStart(2, '0')}:00`);
 
+      // Calculate staff performance if no staff filter is applied
+      let staffPerformance: StaffPerformanceData[] = [];
+      if (!staffFilter || staffFilter === 'all') {
+        const staffStats = new Map<string, { orders: number; totalTime: number }>();
+        
+        completedOrders.forEach(order => {
+          if (order.user_id) {
+            const current = staffStats.get(order.user_id) || { orders: 0, totalTime: 0 };
+            staffStats.set(order.user_id, {
+              orders: current.orders + 1,
+              totalTime: current.totalTime + averagePreparationTime // Mock calculation
+            });
+          }
+        });
+
+        staffPerformance = Array.from(staffStats.entries()).map(([staffId, stats]) => ({
+          staffId,
+          staffName: `Staff ${staffId.slice(0, 8)}`,
+          ordersCompleted: stats.orders,
+          averagePreparationTime: stats.totalTime / stats.orders,
+          efficiency: Math.min(100, (stats.orders / (averagePreparationTime / 10)) * 100)
+        })).sort((a, b) => b.ordersCompleted - a.ordersCompleted);
+      }
+
       return {
         averagePreparationTime,
         completionRate,
         pendingOrders,
-        peakHours
+        peakHours,
+        staffPerformance
       };
     } catch (error) {
       console.error('Error fetching operational data:', error);
@@ -220,6 +260,26 @@ class AnalyticsService {
     } catch (error) {
       console.error('Error fetching menu items:', error);
       throw error;
+    }
+  }
+
+  async getStaffList() {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('user_id')
+        .not('user_id', 'is', null);
+
+      if (error) throw error;
+      
+      const uniqueStaff = [...new Set(data?.map(order => order.user_id))];
+      return uniqueStaff.map(staffId => ({
+        id: staffId,
+        name: `Staff ${staffId?.slice(0, 8)}`
+      }));
+    } catch (error) {
+      console.error('Error fetching staff list:', error);
+      return [];
     }
   }
 

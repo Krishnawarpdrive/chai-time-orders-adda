@@ -13,39 +13,47 @@ import {
 import { 
   TrendingUp, TrendingDown, Clock, Users, ShoppingCart, 
   DollarSign, Star, Download, Calendar as CalendarIcon,
-  Coffee, AlertTriangle, CheckCircle
+  Coffee, AlertTriangle, CheckCircle, UserCheck
 } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { analyticsService, SalesData, OperationalData, CustomerFeedbackData } from '@/services/analyticsService';
 import { cn } from '@/lib/utils';
+import { DateRange } from 'react-day-picker';
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00'];
 
 export default function ComprehensiveDashboard() {
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfDay(subDays(new Date(), 7)),
     to: endOfDay(new Date())
   });
   const [productFilter, setProductFilter] = useState('all');
+  const [staffFilter, setStaffFilter] = useState('all');
   const [salesData, setSalesData] = useState<SalesData | null>(null);
   const [operationalData, setOperationalData] = useState<OperationalData | null>(null);
   const [feedbackData, setFeedbackData] = useState<CustomerFeedbackData | null>(null);
   const [menuCategories, setMenuCategories] = useState<string[]>([]);
+  const [staffList, setStaffList] = useState<{ id: string; name: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [insights, setInsights] = useState<string[]>([]);
   const [recommendations, setRecommendations] = useState<string[]>([]);
 
   useEffect(() => {
-    fetchData();
+    if (dateRange?.from && dateRange?.to) {
+      fetchData();
+    }
     fetchMenuCategories();
-  }, [dateRange, productFilter]);
+    fetchStaffList();
+  }, [dateRange, productFilter, staffFilter]);
 
   const fetchData = async () => {
+    if (!dateRange?.from || !dateRange?.to) return;
+    
     setIsLoading(true);
     try {
       const [sales, operational, feedback] = await Promise.all([
-        analyticsService.getSalesData(dateRange, productFilter),
-        analyticsService.getOperationalData(dateRange),
+        analyticsService.getSalesData({ from: dateRange.from, to: dateRange.to }, productFilter, staffFilter),
+        analyticsService.getOperationalData({ from: dateRange.from, to: dateRange.to }, staffFilter),
         analyticsService.getCustomerFeedbackData()
       ]);
 
@@ -73,6 +81,15 @@ export default function ComprehensiveDashboard() {
       setMenuCategories(categories);
     } catch (error) {
       console.error('Error fetching menu categories:', error);
+    }
+  };
+
+  const fetchStaffList = async () => {
+    try {
+      const staff = await analyticsService.getStaffList();
+      setStaffList(staff);
+    } catch (error) {
+      console.error('Error fetching staff list:', error);
     }
   };
 
@@ -121,11 +138,53 @@ export default function ComprehensiveDashboard() {
         <div>
           <h2 className="text-2xl font-bold text-coffee-green">Sales & Operations Dashboard</h2>
           <p className="text-gray-600">
-            {format(dateRange.from, 'MMM dd')} - {format(dateRange.to, 'MMM dd, yyyy')}
+            {dateRange?.from && dateRange?.to ? (
+              `${format(dateRange.from, 'MMM dd')} - ${format(dateRange.to, 'MMM dd, yyyy')}`
+            ) : (
+              'Select date range'
+            )}
           </p>
         </div>
         
         <div className="flex flex-wrap gap-2">
+          {/* Date Range Picker */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-[240px] justify-start text-left font-normal",
+                  !dateRange && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "LLL dd, y")} -{" "}
+                      {format(dateRange.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Pick a date range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+
           <Select value={productFilter} onValueChange={setProductFilter}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="All Products" />
@@ -135,6 +194,20 @@ export default function ComprehensiveDashboard() {
               {menuCategories.map(category => (
                 <SelectItem key={category} value={category}>
                   {category.charAt(0).toUpperCase() + category.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={staffFilter} onValueChange={setStaffFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="All Staff" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Staff</SelectItem>
+              {staffList.map(staff => (
+                <SelectItem key={staff.id} value={staff.id}>
+                  {staff.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -233,11 +306,23 @@ export default function ComprehensiveDashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={salesData?.dailyTrend || []}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={(value) => format(new Date(value), 'MMM dd')}
+                />
+                <YAxis tickFormatter={(value) => `₹${value}`} />
+                <Tooltip 
+                  labelFormatter={(value) => format(new Date(value), 'MMM dd, yyyy')}
+                  formatter={(value: any) => [`₹${value}`, 'Revenue']}
+                />
                 <Legend />
-                <Line type="monotone" dataKey="revenue" stroke="#8884d8" strokeWidth={2} />
+                <Line 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="hsl(var(--coffee-green))" 
+                  strokeWidth={2}
+                  dot={{ fill: "hsl(var(--coffee-green))", r: 4 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -254,9 +339,14 @@ export default function ComprehensiveDashboard() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="hour" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value: any, name: string) => [
+                    name === 'orders' ? `${value} orders` : `₹${value}`,
+                    name === 'orders' ? 'Orders' : 'Revenue'
+                  ]}
+                />
                 <Legend />
-                <Bar dataKey="orders" fill="#82ca9d" />
+                <Bar dataKey="orders" fill="hsl(var(--bisi-orange))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -328,43 +418,80 @@ export default function ComprehensiveDashboard() {
         </Card>
       </div>
 
-      {/* Operational Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Operational Metrics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-3">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-600">Average Preparation Time</p>
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-bisi-orange" />
-                <span className="text-xl font-bold">{operationalData?.averagePreparationTime} min</span>
+      {/* Operational Details & Staff Performance */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Operational Metrics</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-1">
+              <div className="grid gap-4 grid-cols-3">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-600">Average Preparation Time</p>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-bisi-orange" />
+                    <span className="text-xl font-bold">{operationalData?.averagePreparationTime} min</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-600">Pending Orders</p>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className={cn(
+                      "w-5 h-5",
+                      (operationalData?.pendingOrders || 0) > 10 ? "text-red-500" : "text-green-500"
+                    )} />
+                    <span className="text-xl font-bold">{operationalData?.pendingOrders}</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-600">Peak Hours</p>
+                  <div className="flex flex-wrap gap-1">
+                    {operationalData?.peakHours.map(hour => (
+                      <Badge key={hour} variant="secondary">{hour}</Badge>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-            
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-600">Pending Orders</p>
-              <div className="flex items-center gap-2">
-                <AlertTriangle className={cn(
-                  "w-5 h-5",
-                  (operationalData?.pendingOrders || 0) > 10 ? "text-red-500" : "text-green-500"
-                )} />
-                <span className="text-xl font-bold">{operationalData?.pendingOrders}</span>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-600">Peak Hours</p>
-              <div className="flex flex-wrap gap-1">
-                {operationalData?.peakHours.map(hour => (
-                  <Badge key={hour} variant="secondary">{hour}</Badge>
+          </CardContent>
+        </Card>
+
+        {/* Staff Performance */}
+        {operationalData?.staffPerformance && operationalData.staffPerformance.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCheck className="w-5 h-5" />
+                Staff Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {operationalData.staffPerformance.slice(0, 5).map((staff) => (
+                  <div key={staff.staffId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-coffee-green text-white rounded-full flex items-center justify-center text-sm font-bold">
+                        {staff.staffName.charAt(staff.staffName.length - 1)}
+                      </div>
+                      <div>
+                        <p className="font-medium">{staff.staffName}</p>
+                        <p className="text-sm text-gray-600">{staff.ordersCompleted} orders completed</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{staff.efficiency.toFixed(0)}% efficiency</p>
+                      <p className="text-xs text-gray-600">{staff.averagePreparationTime.toFixed(1)}min avg</p>
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Insights & Recommendations */}
       <div className="grid gap-6 lg:grid-cols-2">
