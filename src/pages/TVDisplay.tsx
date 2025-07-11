@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
-import { Coffee, Clock, CheckCircle } from 'lucide-react';
+import { Coffee, Clock, CheckCircle, Timer, ChefHat, Bell } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CoastersLogo, DecorativeBorder } from '@/components/ui/coasters-logo';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,7 @@ interface Order {
 interface OrderItem {
   id: string;
   quantity: number;
+  status?: string;
   item?: {
     name: string;
     category: string;
@@ -26,90 +28,205 @@ interface OrderItem {
 
 const statusColumns = [
   { 
-    title: 'Not Started', 
+    title: 'Queue', 
     statuses: ['Not Started', 'Pending'], 
-    color: 'bg-muted/50 border-border',
-    headerColor: 'text-muted-foreground',
-    icon: Coffee 
+    color: 'bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200',
+    headerColor: 'text-slate-600',
+    icon: Clock,
+    accent: 'hsl(var(--slate-500))'
   },
   { 
-    title: 'Preparing', 
+    title: 'Kitchen', 
     statuses: ['Accepted', 'Preparing'], 
-    color: 'bg-primary/10 border-primary/20',
+    color: 'bg-gradient-to-br from-primary/5 to-primary/15 border-primary/30',
     headerColor: 'text-primary',
-    icon: Coffee 
+    icon: ChefHat,
+    accent: 'hsl(var(--primary))'
   },
   { 
-    title: 'Pick Up', 
+    title: 'Ready', 
     statuses: ['Ready To Pick', 'Ready'], 
-    color: 'bg-secondary/20 border-secondary',
-    headerColor: 'text-secondary-foreground',
-    icon: CheckCircle 
+    color: 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200',
+    headerColor: 'text-emerald-600',
+    icon: Bell,
+    accent: 'hsl(142, 76%, 36%)'
   }
 ];
 
-const getItemIcon = (category: string, status: string, isReady: boolean = false) => {
-  let iconClass = "w-6 h-6";
-  
-  if (status === 'Preparing') {
-    iconClass += isReady ? " animate-bounce text-green-500" : " animate-pulse text-primary";
-  } else if (status === 'Ready To Pick' || status === 'Ready') {
-    iconClass += " animate-bounce text-secondary-foreground";
-  } else {
-    iconClass += " text-muted-foreground";
-  }
-  
-  return <Coffee className={iconClass} />;
-};
+const getItemIcon = (category: string, itemStatus: string, orderStatus: string) => {
+  const getStatusColor = () => {
+    if (itemStatus === 'Ready' || itemStatus === 'Finished') return 'text-emerald-500';
+    if (itemStatus === 'Preparing' || itemStatus === 'Started') return 'text-primary';
+    return 'text-slate-400';
+  };
 
-const OrderCard: React.FC<{ order: Order; isHighlighted: boolean; columnTitle: string }> = ({ order, isHighlighted, columnTitle }) => {
-  // Simulate item readiness - in real app, this would come from order_items status
-  const isItemReady = (itemIndex: number) => {
-    // For demo: alternate items are ready in Preparing column
-    return columnTitle === 'Preparing' && itemIndex % 2 === 0;
+  const getAnimation = () => {
+    if (itemStatus === 'Ready' || itemStatus === 'Finished') return 'animate-bounce';
+    if (itemStatus === 'Preparing' || itemStatus === 'Started') return 'animate-pulse';
+    return '';
   };
 
   return (
-    <Card className={cn(
-      "mb-4 transition-all duration-500 hover:scale-105",
-      isHighlighted && "ring-4 ring-primary/50 shadow-lg"
-    )}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-center mb-4">
-          <span className="text-3xl font-hackney font-bold text-primary">
-            #{order.order_id}
-          </span>
-        </div>
-        
-        {order.items && order.items.length > 0 && (
-          <div className="space-y-3">
-            {order.items.slice(0, 4).map((item, index) => (
-              <div key={index} className="flex items-center gap-3 text-lg relative">
-                {getItemIcon(item.item?.category || '', order.status, isItemReady(index))}
-                <span className="flex-1 font-medium">{item.item?.name}</span>
-                <span className="font-bold text-primary">x{item.quantity}</span>
-                {isItemReady(index) && columnTitle === 'Preparing' && (
-                  <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                    Prepared
-                  </span>
-                )}
-              </div>
-            ))}
-            {order.items.length > 4 && (
-              <div className="text-center text-sm text-muted-foreground font-medium">
-                +{order.items.length - 4} more items
-              </div>
-            )}
-          </div>
+    <motion.div
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Coffee className={cn("w-5 h-5", getStatusColor(), getAnimation())} />
+    </motion.div>
+  );
+};
+
+const OrderCard: React.FC<{ order: Order; isHighlighted: boolean; columnTitle: string }> = ({ order, isHighlighted, columnTitle }) => {
+  const getOrderAge = () => {
+    const now = new Date();
+    const orderTime = new Date(order.created_at);
+    const diffMinutes = Math.floor((now.getTime() - orderTime.getTime()) / (1000 * 60));
+    return diffMinutes;
+  };
+
+  const getUrgencyColor = () => {
+    const age = getOrderAge();
+    if (age > 20) return 'border-red-400 bg-red-50';
+    if (age > 10) return 'border-orange-400 bg-orange-50';
+    return '';
+  };
+
+  const cardVariants = {
+    initial: { scale: 0.95, opacity: 0, y: 20 },
+    animate: { scale: 1, opacity: 1, y: 0 },
+    exit: { scale: 0.95, opacity: 0, y: -20 },
+    hover: { scale: 1.02, y: -4 }
+  };
+
+  const highlightVariants = {
+    initial: { boxShadow: '0 0 0 0px hsl(var(--primary) / 0.5)' },
+    animate: { 
+      boxShadow: [
+        '0 0 0 0px hsl(var(--primary) / 0.5)',
+        '0 0 0 8px hsl(var(--primary) / 0.2)',
+        '0 0 0 0px hsl(var(--primary) / 0.5)'
+      ]
+    }
+  };
+
+  return (
+    <motion.div
+      variants={cardVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      whileHover="hover"
+      transition={{ duration: 0.3 }}
+      className="relative"
+    >
+      <Card className={cn(
+        "relative overflow-hidden transition-all duration-300",
+        "border-2 bg-white/80 backdrop-blur-sm",
+        getUrgencyColor(),
+        isHighlighted && "ring-2 ring-primary/50"
+      )}>
+        {isHighlighted && (
+          <motion.div
+            variants={highlightVariants}
+            initial="initial"
+            animate="animate"
+            transition={{ duration: 2, repeat: 2 }}
+            className="absolute inset-0 rounded-lg"
+          />
         )}
         
-        <div className="mt-4 pt-3 border-t border-border text-center">
-          <span className="text-xl font-bold text-primary">
-            ₹{order.amount}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+        <CardContent className="p-5">
+          {/* Order Header */}
+          <div className="flex items-center justify-between mb-4">
+            <motion.span 
+              className="text-2xl font-hackney font-bold text-primary"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              #{order.order_id}
+            </motion.span>
+            <div className="text-right">
+              <div className="text-xs text-muted-foreground">{getOrderAge()}m ago</div>
+              {getOrderAge() > 15 && (
+                <motion.div 
+                  className="text-xs text-red-500 font-medium"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  URGENT
+                </motion.div>
+              )}
+            </div>
+          </div>
+          
+          {/* Order Items */}
+          {order.items && order.items.length > 0 && (
+            <div className="space-y-2.5">
+              <AnimatePresence>
+                {order.items.slice(0, 5).map((item, index) => {
+                  const itemStatus = item.status || 'Not Started';
+                  
+                  return (
+                    <motion.div
+                      key={`${item.id}-${index}`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={cn(
+                        "flex items-center gap-3 p-2 rounded-lg transition-all",
+                        "hover:bg-primary/5",
+                        itemStatus === 'Ready' && "bg-emerald-50 border border-emerald-200"
+                      )}
+                    >
+                      {getItemIcon(item.item?.category || '', itemStatus, order.status)}
+                      <span className="flex-1 font-medium text-sm truncate">
+                        {item.item?.name}
+                      </span>
+                      <span className="font-bold text-primary text-sm">×{item.quantity}</span>
+                      
+                      {itemStatus === 'Ready' && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="w-2 h-2 bg-emerald-400 rounded-full"
+                        />
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+              
+              {order.items.length > 5 && (
+                <div className="text-center text-xs text-muted-foreground font-medium py-1">
+                  +{order.items.length - 5} more items
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Order Footer */}
+          <motion.div 
+            className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <span className="text-lg font-bold text-primary">
+              ₹{order.amount}
+            </span>
+            
+            {columnTitle === 'Kitchen' && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Timer className="w-3 h-3" />
+                <span>~{Math.max(5 - Math.floor(getOrderAge() / 2), 1)}m</span>
+              </div>
+            )}
+          </motion.div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 
@@ -117,47 +234,137 @@ const StatusColumn: React.FC<{
   column: typeof statusColumns[0]; 
   orders: Order[];
   highlightedOrder: string | null;
-}> = ({ column, orders, highlightedOrder }) => {
+  index: number;
+}> = ({ column, orders, highlightedOrder, index }) => {
   const Icon = column.icon;
   
-  // Animation classes based on column
-  let iconAnimation = "";
-  if (column.title === 'Preparing') {
-    iconAnimation = "animate-spin";
-  } else if (column.title === 'Pick Up') {
-    iconAnimation = "animate-bounce";
-  }
-  
+  const getIconAnimation = () => {
+    if (column.title === 'Kitchen') return 'animate-pulse';
+    if (column.title === 'Ready') return 'animate-bounce';
+    return '';
+  };
+
+  const columnVariants = {
+    initial: { opacity: 0, y: 50 },
+    animate: { opacity: 1, y: 0 },
+  };
+
+  const headerVariants = {
+    initial: { scale: 0.8, opacity: 0 },
+    animate: { scale: 1, opacity: 1 },
+  };
+
   return (
-    <div className={cn("rounded-xl border-2 p-6 min-h-[80vh]", column.color)}>
-      <div className="flex flex-col items-center mb-6">
-        <Icon className={cn("w-12 h-12 mb-3", column.headerColor, iconAnimation)} />
-        <h2 className={cn("text-3xl font-hackney font-bold text-center", column.headerColor)}>
+    <motion.div
+      variants={columnVariants}
+      initial="initial"
+      animate="animate"
+      transition={{ duration: 0.6, delay: index * 0.1 }}
+      className={cn(
+        "rounded-2xl border-2 p-6 min-h-[85vh] relative overflow-hidden",
+        "backdrop-blur-sm shadow-lg",
+        column.color
+      )}
+    >
+      {/* Decorative background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div 
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(circle at 20% 80%, ${column.accent} 1px, transparent 1px), radial-gradient(circle at 80% 20%, ${column.accent} 1px, transparent 1px)`,
+            backgroundSize: '40px 40px'
+          }}
+        />
+      </div>
+
+      {/* Header */}
+      <motion.div 
+        variants={headerVariants}
+        initial="initial"
+        animate="animate"
+        transition={{ delay: 0.3 + index * 0.1 }}
+        className="flex flex-col items-center mb-6 relative z-10"
+      >
+        <motion.div
+          animate={{ 
+            rotate: column.title === 'Kitchen' ? [0, 5, -5, 0] : 0 
+          }}
+          transition={{ 
+            duration: 2, 
+            repeat: column.title === 'Kitchen' ? Infinity : 0,
+            ease: "easeInOut"
+          }}
+        >
+          <Icon className={cn(
+            "w-14 h-14 mb-3 drop-shadow-sm", 
+            column.headerColor, 
+            getIconAnimation()
+          )} />
+        </motion.div>
+        
+        <h2 className={cn(
+          "text-3xl font-hackney font-bold text-center mb-2", 
+          column.headerColor
+        )}>
           {column.title}
         </h2>
-        <span className="text-lg text-muted-foreground mt-1">
-          {orders.length} orders
-        </span>
-      </div>
-      
-      <div className="space-y-4 max-h-[calc(80vh-160px)] overflow-y-auto">
-        {orders.length === 0 ? (
-          <div className="text-center py-12">
-            <Icon className={cn("w-20 h-20 mx-auto mb-4 text-muted-foreground/30", iconAnimation)} />
-            <p className="text-xl text-muted-foreground">No orders</p>
+        
+        <motion.div
+          className="flex items-center gap-2"
+          animate={{ scale: [0.95, 1.05, 0.95] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <div className={cn(
+            "px-3 py-1 rounded-full text-sm font-medium",
+            "border border-current/20 bg-white/50"
+          )}>
+            <span className={column.headerColor}>{orders.length} orders</span>
           </div>
-        ) : (
-          orders.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              isHighlighted={highlightedOrder === order.id}
-              columnTitle={column.title}
-            />
-          ))
-        )}
+        </motion.div>
+      </motion.div>
+      
+      {/* Orders List */}
+      <div className="space-y-3 max-h-[calc(85vh-180px)] overflow-y-auto custom-scrollbar relative z-10">
+        <AnimatePresence mode="popLayout">
+          {orders.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-16"
+            >
+              <Icon className={cn(
+                "w-24 h-24 mx-auto mb-4 opacity-20", 
+                getIconAnimation()
+              )} />
+              <p className="text-xl text-muted-foreground font-medium">
+                No orders in {column.title.toLowerCase()}
+              </p>
+            </motion.div>
+          ) : (
+            orders.map((order, orderIndex) => (
+              <motion.div
+                key={order.id}
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ 
+                  duration: 0.3,
+                  delay: orderIndex * 0.05,
+                  layout: { duration: 0.3 }
+                }}
+              >
+                <OrderCard
+                  order={order}
+                  isHighlighted={highlightedOrder === order.id}
+                  columnTitle={column.title}
+                />
+              </motion.div>
+            ))
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -184,6 +391,7 @@ export default function TVDisplay() {
             .select(`
               id,
               quantity,
+              status,
               item:item_id(name, category)
             `)
             .eq('order_id', order.id);
@@ -249,64 +457,150 @@ export default function TVDisplay() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Coffee className="w-16 h-16 mx-auto mb-4 animate-pulse text-primary" />
-          <p className="text-2xl font-medium">Loading orders...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary/5 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          >
+            <Coffee className="w-20 h-20 mx-auto mb-6 text-primary" />
+          </motion.div>
+          <motion.p
+            className="text-2xl font-medium text-muted-foreground"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            Loading kitchen display...
+          </motion.p>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      {/* Header with Coasters branding */}
-      <div className="text-center mb-8">
-        <CoastersLogo size="lg" className="mb-4" />
-        <DecorativeBorder className="w-64 h-6 mx-auto mb-4" />
-        <p className="text-2xl text-muted-foreground font-medium">
-          Live updates • {new Date().toLocaleTimeString()}
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary/5 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-10 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-emerald-100/50 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/3 to-transparent rounded-full" />
       </div>
 
-      {/* Three-column layout */}
-      <div className="grid grid-cols-3 gap-8 max-w-7xl mx-auto">
-        {statusColumns.map((column) => {
-          const columnOrders = orders.filter(order => 
-            column.statuses.includes(order.status)
-          );
+      <div className="relative z-10 p-6">
+        {/* Enhanced Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-8"
+        >
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
+            <CoastersLogo size="lg" className="mb-4 drop-shadow-sm" />
+          </motion.div>
           
-          return (
-            <StatusColumn
-              key={column.title}
-              column={column}
-              orders={columnOrders}
-              highlightedOrder={highlightedOrder}
+          <motion.div
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+          >
+            <DecorativeBorder className="w-80 h-6 mx-auto mb-6" />
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="flex items-center justify-center gap-3 text-xl text-muted-foreground font-medium"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-3 h-3 bg-emerald-500 rounded-full"
             />
-          );
-        })}
-      </div>
+            <span>Live Kitchen Display</span>
+            <span className="text-primary font-mono">
+              {new Date().toLocaleTimeString()}
+            </span>
+          </motion.div>
+        </motion.div>
 
-      {/* Footer stats */}
-      <div className="mt-8 text-center">
-        <div className="grid grid-cols-3 gap-8 max-w-md mx-auto">
-          {statusColumns.map((column) => {
-            const count = orders.filter(order => 
+        {/* Three-column layout */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+          className="grid grid-cols-3 gap-6 max-w-7xl mx-auto"
+        >
+          {statusColumns.map((column, index) => {
+            const columnOrders = orders.filter(order => 
               column.statuses.includes(order.status)
-            ).length;
+            );
             
             return (
-              <div key={column.title} className="text-center">
-                <div className={cn("text-3xl font-bold", column.headerColor)}>
-                  {count}
-                </div>
-                <div className="text-sm text-muted-foreground font-medium">
-                  {column.title}
-                </div>
-              </div>
+              <StatusColumn
+                key={column.title}
+                column={column}
+                orders={columnOrders}
+                highlightedOrder={highlightedOrder}
+                index={index}
+              />
             );
           })}
-        </div>
+        </motion.div>
+
+        {/* Enhanced Footer Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.6 }}
+          className="mt-8 text-center"
+        >
+          <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto">
+            {statusColumns.map((column, index) => {
+              const count = orders.filter(order => 
+                column.statuses.includes(order.status)
+              ).length;
+              
+              return (
+                <motion.div
+                  key={column.title}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 1 + index * 0.1, duration: 0.4 }}
+                  className="text-center"
+                >
+                  <motion.div
+                    className={cn("text-4xl font-bold mb-1", column.headerColor)}
+                    animate={{ scale: count > 0 ? [1, 1.1, 1] : 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {count}
+                  </motion.div>
+                  <div className="text-sm text-muted-foreground font-medium uppercase tracking-wide">
+                    {column.title}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+          
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2 }}
+            className="mt-6 text-xs text-muted-foreground"
+          >
+            Last updated: {new Date().toLocaleString()}
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   );
