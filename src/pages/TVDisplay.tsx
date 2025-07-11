@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Coffee, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Coffee, Clock, CheckCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { CoastersLogo, DecorativeBorder } from '@/components/ui/coasters-logo';
 import { cn } from '@/lib/utils';
 
 interface Order {
@@ -27,84 +28,83 @@ const statusColumns = [
   { 
     title: 'Not Started', 
     statuses: ['Not Started', 'Pending'], 
-    color: 'bg-destructive/10 border-destructive/20',
-    headerColor: 'text-destructive',
-    icon: AlertCircle 
+    color: 'bg-muted/50 border-border',
+    headerColor: 'text-muted-foreground',
+    icon: Coffee 
   },
   { 
     title: 'Preparing', 
     statuses: ['Accepted', 'Preparing'], 
-    color: 'bg-coffee-green/10 border-coffee-green/20',
-    headerColor: 'text-coffee-green',
-    icon: Clock 
+    color: 'bg-primary/10 border-primary/20',
+    headerColor: 'text-primary',
+    icon: Coffee 
   },
   { 
     title: 'Pick Up', 
     statuses: ['Ready To Pick', 'Ready'], 
-    color: 'bg-accent/20 border-accent',
-    headerColor: 'text-accent-foreground',
+    color: 'bg-secondary/20 border-secondary',
+    headerColor: 'text-secondary-foreground',
     icon: CheckCircle 
   }
 ];
 
-const getItemIcon = (category: string) => {
-  switch (category?.toLowerCase()) {
-    case 'coffee':
-    case 'beverages':
-      return <Coffee className="w-6 h-6 animate-pulse" />;
-    default:
-      return <Coffee className="w-6 h-6" />;
+const getItemIcon = (category: string, status: string, isReady: boolean = false) => {
+  let iconClass = "w-6 h-6";
+  
+  if (status === 'Preparing') {
+    iconClass += isReady ? " animate-bounce text-green-500" : " animate-pulse text-primary";
+  } else if (status === 'Ready To Pick' || status === 'Ready') {
+    iconClass += " animate-bounce text-secondary-foreground";
+  } else {
+    iconClass += " text-muted-foreground";
   }
+  
+  return <Coffee className={iconClass} />;
 };
 
-const OrderCard: React.FC<{ order: Order; isHighlighted: boolean }> = ({ order, isHighlighted }) => {
-  const orderAge = Math.floor((Date.now() - new Date(order.created_at).getTime()) / (1000 * 60));
-  const isUrgent = orderAge > 15;
+const OrderCard: React.FC<{ order: Order; isHighlighted: boolean; columnTitle: string }> = ({ order, isHighlighted, columnTitle }) => {
+  // Simulate item readiness - in real app, this would come from order_items status
+  const isItemReady = (itemIndex: number) => {
+    // For demo: alternate items are ready in Preparing column
+    return columnTitle === 'Preparing' && itemIndex % 2 === 0;
+  };
 
   return (
     <Card className={cn(
       "mb-4 transition-all duration-500 hover:scale-105",
-      isHighlighted && "ring-4 ring-primary/50 shadow-lg",
-      isUrgent && "border-destructive bg-destructive/5"
+      isHighlighted && "ring-4 ring-primary/50 shadow-lg"
     )}>
       <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl font-hackney font-bold text-primary">
-              #{order.order_id}
-            </span>
-            {isUrgent && (
-              <AlertCircle className="w-5 h-5 text-destructive animate-pulse" />
-            )}
-          </div>
-          <span className="text-lg font-medium text-muted-foreground">
-            {orderAge}m ago
+        <div className="flex items-center justify-center mb-4">
+          <span className="text-3xl font-hackney font-bold text-primary">
+            #{order.order_id}
           </span>
         </div>
         
-        <h3 className="text-xl font-semibold mb-3 text-card-foreground">
-          {order.customer_name}
-        </h3>
-        
         {order.items && order.items.length > 0 && (
-          <div className="space-y-2">
-            {order.items.slice(0, 3).map((item, index) => (
-              <div key={index} className="flex items-center gap-2 text-base">
-                {getItemIcon(item.item?.category || '')}
-                <span className="flex-1">{item.item?.name}</span>
-                <span className="font-medium">x{item.quantity}</span>
+          <div className="space-y-3">
+            {order.items.slice(0, 4).map((item, index) => (
+              <div key={index} className="flex items-center gap-3 text-lg relative">
+                {getItemIcon(item.item?.category || '', order.status, isItemReady(index))}
+                <span className="flex-1 font-medium">{item.item?.name}</span>
+                <span className="font-bold text-primary">x{item.quantity}</span>
+                {isItemReady(index) && columnTitle === 'Preparing' && (
+                  <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    Prepared
+                  </span>
+                )}
               </div>
             ))}
-            {order.items.length > 3 && (
-              <div className="text-sm text-muted-foreground">
-                +{order.items.length - 3} more items
+            {order.items.length > 4 && (
+              <div className="text-center text-sm text-muted-foreground font-medium">
+                +{order.items.length - 4} more items
               </div>
             )}
           </div>
         )}
         
-        <div className="mt-4 pt-3 border-t border-border">
-          <span className="text-lg font-bold text-primary">
+        <div className="mt-4 pt-3 border-t border-border text-center">
+          <span className="text-xl font-bold text-primary">
             ₹{order.amount}
           </span>
         </div>
@@ -120,24 +120,30 @@ const StatusColumn: React.FC<{
 }> = ({ column, orders, highlightedOrder }) => {
   const Icon = column.icon;
   
+  // Animation classes based on column
+  let iconAnimation = "";
+  if (column.title === 'Preparing') {
+    iconAnimation = "animate-spin";
+  } else if (column.title === 'Pick Up') {
+    iconAnimation = "animate-bounce";
+  }
+  
   return (
     <div className={cn("rounded-xl border-2 p-6 min-h-[80vh]", column.color)}>
-      <div className="flex items-center gap-3 mb-6">
-        <Icon className={cn("w-8 h-8", column.headerColor)} />
-        <div>
-          <h2 className={cn("text-3xl font-hackney font-bold", column.headerColor)}>
-            {column.title}
-          </h2>
-          <span className="text-lg text-muted-foreground">
-            {orders.length} orders
-          </span>
-        </div>
+      <div className="flex flex-col items-center mb-6">
+        <Icon className={cn("w-12 h-12 mb-3", column.headerColor, iconAnimation)} />
+        <h2 className={cn("text-3xl font-hackney font-bold text-center", column.headerColor)}>
+          {column.title}
+        </h2>
+        <span className="text-lg text-muted-foreground mt-1">
+          {orders.length} orders
+        </span>
       </div>
       
-      <div className="space-y-4 max-h-[calc(80vh-120px)] overflow-y-auto">
+      <div className="space-y-4 max-h-[calc(80vh-160px)] overflow-y-auto">
         {orders.length === 0 ? (
-          <div className="text-center py-8">
-            <Icon className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+          <div className="text-center py-12">
+            <Icon className={cn("w-20 h-20 mx-auto mb-4 text-muted-foreground/30", iconAnimation)} />
             <p className="text-xl text-muted-foreground">No orders</p>
           </div>
         ) : (
@@ -146,6 +152,7 @@ const StatusColumn: React.FC<{
               key={order.id}
               order={order}
               isHighlighted={highlightedOrder === order.id}
+              columnTitle={column.title}
             />
           ))
         )}
@@ -253,12 +260,11 @@ export default function TVDisplay() {
 
   return (
     <div className="min-h-screen bg-background p-8">
-      {/* Header */}
+      {/* Header with Coasters branding */}
       <div className="text-center mb-8">
-        <h1 className="text-6xl font-hackney font-bold text-primary mb-2">
-          Order Status
-        </h1>
-        <p className="text-2xl text-muted-foreground">
+        <CoastersLogo size="lg" className="mb-4" />
+        <DecorativeBorder className="w-64 h-6 mx-auto mb-4" />
+        <p className="text-2xl text-muted-foreground font-medium">
           Live updates • {new Date().toLocaleTimeString()}
         </p>
       </div>
@@ -294,7 +300,7 @@ export default function TVDisplay() {
                 <div className={cn("text-3xl font-bold", column.headerColor)}>
                   {count}
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground font-medium">
                   {column.title}
                 </div>
               </div>
