@@ -17,6 +17,7 @@ import CustomerProfile from "./pages/CustomerProfile";
 import CustomerOrders from "./pages/CustomerOrders";
 import CustomerRefer from "./pages/CustomerRefer";
 import CustomerCart from "./pages/CustomerCart";
+import TVDisplay from "./pages/TVDisplay";
 import { CartProvider } from "./context/CartContext";
 
 const queryClient = new QueryClient();
@@ -80,6 +81,9 @@ const App = () => {
               <Route path="/products" element={<Navigate to="/staff/products" replace />} />
               <Route path="/offers" element={<Navigate to="/staff/offers" replace />} />
               <Route path="/reports" element={<Navigate to="/staff/reports" replace />} />
+              
+              {/* TV Display route */}
+              <Route path="/tv-display" element={<TVDisplay />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

@@ -25,9 +25,9 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
-				'coffee-green': '#004D47',
-				'bisi-orange': '#E2552D',
-				'milk-sugar': '#EFEFDF',
+				'coffee-green': 'hsl(165, 100%, 15%)',
+				'bisi-orange': 'hsl(13, 74%, 54%)',
+				'milk-sugar': 'hsl(57, 60%, 93%)',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
