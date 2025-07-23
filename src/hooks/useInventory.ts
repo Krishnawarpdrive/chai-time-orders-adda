@@ -31,6 +31,7 @@ export const useInventory = () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'inventory' },
         (payload) => {
+          console.log('Inventory realtime update:', payload);
           fetchInventory();
         }
       )
@@ -42,37 +43,56 @@ export const useInventory = () => {
   }, []);
 
   const fetchInventory = async () => {
+    console.log('Fetching inventory data...');
     setLoading(true);
+    setError(null);
+    
     try {
       const { data, error } = await supabase
         .from('inventory')
         .select('*')
         .order('name');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Fetched inventory data:', data);
       setInventory(data as InventoryItem[]);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch inventory data');
       console.error('Error fetching inventory:', err);
+      setError(err.message || 'Failed to fetch inventory data');
+      toast({
+        title: "Error",
+        description: "Failed to fetch inventory data. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const updateInventoryItem = async (itemId: string, newQuantity: number) => {
+    console.log('Updating inventory item:', { itemId, newQuantity });
+    
     try {
-      // Update inventory item using Supabase client
       const { error } = await supabase
         .from('inventory')
         .update({
           quantity: newQuantity,
           updated_at: new Date().toISOString(),
-          last_restocked: new Date().toISOString() // Track when it was restocked
+          last_restocked: new Date().toISOString()
         })
         .eq('id', itemId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating inventory:', error);
+        throw error;
+      }
 
+      console.log('Successfully updated inventory item');
+      
       // Update local state
       setInventory(inventory.map(item => 
         item.id === itemId 
@@ -80,7 +100,6 @@ export const useInventory = () => {
           : item
       ));
 
-      // Show success message
       toast({
         title: "Inventory Updated",
         description: `Successfully updated inventory item.`,
@@ -120,6 +139,8 @@ export const useInventory = () => {
   
   // Create a new inventory item
   const createInventoryItem = async (item: Omit<InventoryItem, 'id'>) => {
+    console.log('Creating new inventory item:', item);
+    
     try {
       const { data, error } = await supabase
         .from('inventory')
@@ -130,7 +151,12 @@ export const useInventory = () => {
         })
         .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating inventory item:', error);
+        throw error;
+      }
+      
+      console.log('Successfully created inventory item:', data);
       
       toast({
         title: "Item Created",
