@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import InventoryRequestsManager from '@/components/inventory/InventoryRequestsManager';
 import InventoryTable from '@/components/inventory/InventoryTable';
+import VendorManagement from '@/components/inventory/VendorManagement';
+import PurchaseOrderManagement from '@/components/inventory/PurchaseOrderManagement';
 import { useLocation } from 'react-router-dom';
 import OrderDetails from '@/components/inventory/OrderDetails';
 
@@ -18,6 +20,7 @@ const InventoryPage = () => {
   
   // Check if we're on a franchise or brand route
   const isOwnerOrFranchiseRoute = location.pathname.includes('/franchise') || location.pathname.includes('/brand');
+  const isBrandRoute = location.pathname.includes('/brand');
   
   // Handle scroll events to detect when to collapse the header
   React.useEffect(() => {
@@ -67,7 +70,7 @@ const InventoryPage = () => {
               <p className="text-gray-600 text-sm">Manage and track your inventory levels</p>
             </div>
 
-            <Tabs defaultValue={isOwnerOrFranchiseRoute ? "requests" : "inventory"} className="w-full">
+            <Tabs defaultValue={isBrandRoute ? "vendors" : isOwnerOrFranchiseRoute ? "requests" : "inventory"} className="w-full">
               <TabsList className="mb-6 bg-white border border-gray-200">
                 <TabsTrigger 
                   value="inventory" 
@@ -90,12 +93,26 @@ const InventoryPage = () => {
                       Request Management
                     </TabsTrigger>
                     <TabsTrigger 
+                      value="purchase-orders" 
+                      className="data-[state=active]:bg-coffee-green data-[state=active]:text-white"
+                    >
+                      Purchase Orders
+                    </TabsTrigger>
+                    <TabsTrigger 
                       value="history" 
                       className="data-[state=active]:bg-coffee-green data-[state=active]:text-white"
                     >
                       Order History
                     </TabsTrigger>
                   </>
+                )}
+                {isBrandRoute && (
+                  <TabsTrigger 
+                    value="vendors" 
+                    className="data-[state=active]:bg-coffee-green data-[state=active]:text-white"
+                  >
+                    Vendor Management
+                  </TabsTrigger>
                 )}
               </TabsList>
               
@@ -112,6 +129,11 @@ const InventoryPage = () => {
                   <TabsContent value="requests">
                     <InventoryRequestsManager />
                   </TabsContent>
+                  
+                  <TabsContent value="purchase-orders">
+                    <PurchaseOrderManagement />
+                  </TabsContent>
+                  
                   <TabsContent value="history">
                     <div className="bg-white shadow rounded-lg p-6">
                       <h3 className="text-lg font-medium mb-4">Order History</h3>
@@ -120,6 +142,12 @@ const InventoryPage = () => {
                     </div>
                   </TabsContent>
                 </>
+              )}
+              
+              {isBrandRoute && (
+                <TabsContent value="vendors">
+                  <VendorManagement />
+                </TabsContent>
               )}
             </Tabs>
           </div>
