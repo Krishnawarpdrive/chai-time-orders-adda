@@ -19,6 +19,9 @@ export interface Staff {
   bank_account_number?: string;
   bank_name?: string;
   bank_routing_number?: string;
+  working_days?: string;
+  shift_start_time?: string;
+  shift_end_time?: string;
   created_at: string;
   updated_at: string;
 }
@@ -32,6 +35,7 @@ export interface StaffPerformance {
   orders_completed?: number;
   customer_rating?: number;
   shift_hours?: number;
+  working_days_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -57,5 +61,8 @@ export interface CreateStaffData {
   bank_account_number?: string;
   bank_name?: string;
   bank_routing_number?: string;
+  working_days?: string;
+  shift_start_time?: string;
+  shift_end_time?: string;
   outlet_id?: string;
 }

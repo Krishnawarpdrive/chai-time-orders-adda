@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Star, TrendingUp, Clock, DollarSign } from 'lucide-react';
+import { Star, TrendingUp, Clock, DollarSign, Calendar, Users } from 'lucide-react';
 import { useStaffWithPerformance } from '@/hooks/useStaff';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -64,12 +64,20 @@ const StaffPerformanceTable = () => {
     return amount ? `₹${amount.toLocaleString()}` : '₹0';
   };
 
+  const formatTime = (time?: string) => {
+    if (!time) return 'N/A';
+    return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-coffee-green" />
-          Staff Performance Today
+          Staff Performance & Schedule
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -80,9 +88,11 @@ const StaffPerformanceTable = () => {
                 <TableHead>Staff Member</TableHead>
                 <TableHead>Position</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-center">Schedule</TableHead>
+                <TableHead className="text-center">Working Days</TableHead>
                 <TableHead className="text-center">Products Sold</TableHead>
-                <TableHead className="text-center">Orders Completed</TableHead>
-                <TableHead className="text-center">Total Sales</TableHead>
+                <TableHead className="text-center">Orders</TableHead>
+                <TableHead className="text-center">Sales</TableHead>
                 <TableHead className="text-center">Rating</TableHead>
                 <TableHead className="text-center">Hours</TableHead>
               </TableRow>
@@ -112,6 +122,24 @@ const StaffPerformanceTable = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-coffee-green" />
+                        <span className="text-sm">
+                          {formatTime(staff.shift_start_time)} - {formatTime(staff.shift_end_time)}
+                        </span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Calendar className="h-4 w-4 text-coffee-green" />
+                      <span className="text-sm font-medium">
+                        {staff.working_days || 'Monday-Friday'}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1">
                       <span className="font-medium">
                         {staff.performance?.products_sold || 0}
@@ -120,7 +148,7 @@ const StaffPerformanceTable = () => {
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <Clock className="h-4 w-4 text-coffee-green" />
+                      <Users className="h-4 w-4 text-coffee-green" />
                       <span className="font-medium">
                         {staff.performance?.orders_completed || 0}
                       </span>
@@ -146,6 +174,11 @@ const StaffPerformanceTable = () => {
                     <span className="font-medium">
                       {staff.performance?.shift_hours || 0}h
                     </span>
+                    {staff.performance?.working_days_count !== undefined && (
+                      <div className="text-xs text-gray-500">
+                        {staff.performance.working_days_count} days
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -155,7 +188,9 @@ const StaffPerformanceTable = () => {
 
         {(!staffWithPerformance || staffWithPerformance.length === 0) && (
           <div className="text-center py-8 text-gray-500">
-            No staff performance data available
+            <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <h3 className="font-medium text-gray-900 mb-2">No staff members found</h3>
+            <p className="text-sm">Add staff members to see their performance data here.</p>
           </div>
         )}
       </CardContent>

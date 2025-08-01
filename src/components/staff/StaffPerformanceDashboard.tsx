@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Users, TrendingUp } from 'lucide-react';
+import { UserPlus, Users, TrendingUp, Clock, Calendar } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StaffPerformanceTable from './StaffPerformanceTable';
+import StaffAnalyticsDashboard from './StaffAnalyticsDashboard';
 import AddStaffDrawer from './AddStaffDrawer';
 import { useStaff, useStaffWithPerformance } from '@/hooks/useStaff';
 
@@ -20,6 +21,11 @@ const StaffPerformanceDashboard = () => {
     sum + (s.performance?.total_sales || 0), 0) || 0;
   const todaysOrders = staffWithPerformance?.reduce((sum, s) => 
     sum + (s.performance?.orders_completed || 0), 0) || 0;
+  const totalHours = staffWithPerformance?.reduce((sum, s) => 
+    sum + (s.performance?.shift_hours || 0), 0) || 0;
+  const avgRating = staffWithPerformance?.length 
+    ? staffWithPerformance.reduce((sum, s) => sum + (s.performance?.customer_rating || 0), 0) / staffWithPerformance.length
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -39,7 +45,7 @@ const StaffPerformanceDashboard = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
@@ -74,16 +80,38 @@ const StaffPerformanceDashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Orders Completed</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-600" />
+            <CardTitle className="text-sm font-medium">Orders</CardTitle>
+            <Users className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">{todaysOrders}</div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
+            <Clock className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{totalHours}h</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg Rating</CardTitle>
+            <TrendingUp className="h-4 w-4 text-yellow-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">
+              {avgRating.toFixed(1)}⭐
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Performance Table */}
+      {/* Tabs for different views */}
       <Tabs defaultValue="performance" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
           <TabsTrigger value="performance">Performance</TabsTrigger>
@@ -95,14 +123,7 @@ const StaffPerformanceDashboard = () => {
         </TabsContent>
         
         <TabsContent value="analytics" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analytics Dashboard</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-500">Analytics features coming soon...</p>
-            </CardContent>
-          </Card>
+          <StaffAnalyticsDashboard />
         </TabsContent>
       </Tabs>
 

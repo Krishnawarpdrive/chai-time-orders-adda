@@ -585,8 +585,11 @@ export type Database = {
           phone: string
           position: string
           salary: number | null
+          shift_end_time: string | null
+          shift_start_time: string | null
           status: string
           updated_at: string
+          working_days: string | null
         }
         Insert: {
           address?: string | null
@@ -608,8 +611,11 @@ export type Database = {
           phone: string
           position: string
           salary?: number | null
+          shift_end_time?: string | null
+          shift_start_time?: string | null
           status?: string
           updated_at?: string
+          working_days?: string | null
         }
         Update: {
           address?: string | null
@@ -631,8 +637,11 @@ export type Database = {
           phone?: string
           position?: string
           salary?: number | null
+          shift_end_time?: string | null
+          shift_start_time?: string | null
           status?: string
           updated_at?: string
+          working_days?: string | null
         }
         Relationships: [
           {
@@ -656,6 +665,7 @@ export type Database = {
           staff_id: string | null
           total_sales: number | null
           updated_at: string
+          working_days_count: number | null
         }
         Insert: {
           created_at?: string
@@ -668,6 +678,7 @@ export type Database = {
           staff_id?: string | null
           total_sales?: number | null
           updated_at?: string
+          working_days_count?: number | null
         }
         Update: {
           created_at?: string
@@ -680,6 +691,7 @@ export type Database = {
           staff_id?: string | null
           total_sales?: number | null
           updated_at?: string
+          working_days_count?: number | null
         }
         Relationships: [
           {
