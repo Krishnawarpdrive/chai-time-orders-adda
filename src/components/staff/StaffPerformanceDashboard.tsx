@@ -1,160 +1,115 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Star, Clock, CheckCircle } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { UserPlus, Users, TrendingUp } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-interface StaffPerformanceProps {
-  staffId: string;
-  name: string;
-  completionRate: number;
-  avgOrderTime: number; // in minutes
-  accuracyRate: number;
-  customerRating: number; // out of 5
-  totalOrdersToday: number;
-  totalOrdersCompleted: number;
-}
-
-const StaffPerformanceCard = ({ 
-  name, 
-  completionRate, 
-  avgOrderTime, 
-  accuracyRate, 
-  customerRating,
-  totalOrdersToday,
-  totalOrdersCompleted 
-}: StaffPerformanceProps) => {
-  
-  // Determine performance status based on metrics
-  const getPerformanceStatus = () => {
-    const averageScore = (completionRate + (accuracyRate * 20) + (customerRating * 20)) / 3;
-    if (averageScore >= 80) return { label: "Excellent", color: "bg-green-500" };
-    if (averageScore >= 60) return { label: "Good", color: "bg-green-400" };
-    if (averageScore >= 40) return { label: "Average", color: "bg-yellow-400" };
-    return { label: "Needs Improvement", color: "bg-red-500" };
-  };
-
-  const performanceStatus = getPerformanceStatus();
-  
-  return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-coffee-green">{name}</CardTitle>
-          <div className={`px-2 py-1 rounded-full text-xs text-white ${performanceStatus.color}`}>
-            {performanceStatus.label}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div>
-            <div className="flex justify-between items-center mb-1 text-sm">
-              <span className="flex items-center gap-1">
-                <CheckCircle size={16} className="text-coffee-green" />
-                Completion Rate
-              </span>
-              <span className="font-medium">{completionRate}%</span>
-            </div>
-            <Progress value={completionRate} className="h-2" />
-          </div>
-          
-          <div>
-            <div className="flex justify-between items-center mb-1 text-sm">
-              <span className="flex items-center gap-1">
-                <Clock size={16} className="text-coffee-green" />
-                Avg. Order Time
-              </span>
-              <span className="font-medium">{avgOrderTime} min</span>
-            </div>
-            <Progress 
-              value={Math.max(0, 100 - (avgOrderTime * 5))} 
-              className="h-2" 
-            />
-          </div>
-          
-          <div>
-            <div className="flex justify-between items-center mb-1 text-sm">
-              <span className="flex items-center gap-1">
-                <CheckCircle size={16} className="text-coffee-green" />
-                Accuracy Rate
-              </span>
-              <span className="font-medium">{accuracyRate}%</span>
-            </div>
-            <Progress value={accuracyRate} className="h-2" />
-          </div>
-          
-          <div className="flex justify-between items-center mt-2">
-            <div className="flex items-center">
-              <Star size={16} className="text-yellow-500 mr-1" />
-              <span className="text-sm">Rating: {customerRating.toFixed(1)}/5.0</span>
-            </div>
-            <div className="text-sm text-gray-600">
-              {totalOrdersCompleted}/{totalOrdersToday} orders
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-const mockStaffData: StaffPerformanceProps[] = [
-  {
-    staffId: '1',
-    name: 'Arjun Kumar',
-    completionRate: 92,
-    avgOrderTime: 4.5,
-    accuracyRate: 95,
-    customerRating: 4.8,
-    totalOrdersToday: 24,
-    totalOrdersCompleted: 22
-  },
-  {
-    staffId: '2',
-    name: 'Priya Sharma',
-    completionRate: 86,
-    avgOrderTime: 5.2,
-    accuracyRate: 90,
-    customerRating: 4.5,
-    totalOrdersToday: 20,
-    totalOrdersCompleted: 17
-  },
-  {
-    staffId: '3',
-    name: 'Raj Patel',
-    completionRate: 75,
-    avgOrderTime: 6.8,
-    accuracyRate: 85,
-    customerRating: 3.9,
-    totalOrdersToday: 18,
-    totalOrdersCompleted: 13
-  },
-];
+import StaffPerformanceTable from './StaffPerformanceTable';
+import AddStaffDrawer from './AddStaffDrawer';
+import { useStaff, useStaffWithPerformance } from '@/hooks/useStaff';
 
 const StaffPerformanceDashboard = () => {
+  const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
+  const { data: staff } = useStaff();
+  const { data: staffWithPerformance } = useStaffWithPerformance();
+
+  // Calculate summary metrics
+  const totalStaff = staff?.length || 0;
+  const activeStaff = staff?.filter(s => s.status === 'active').length || 0;
+  const todaysTotalSales = staffWithPerformance?.reduce((sum, s) => 
+    sum + (s.performance?.total_sales || 0), 0) || 0;
+  const todaysOrders = staffWithPerformance?.reduce((sum, s) => 
+    sum + (s.performance?.orders_completed || 0), 0) || 0;
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold text-coffee-green">Staff Performance</h2>
-        <Tabs defaultValue="today" className="w-[220px]">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="today">Today</TabsTrigger>
-            <TabsTrigger value="week">Week</TabsTrigger>
-            <TabsTrigger value="month">Month</TabsTrigger>
-          </TabsList>
-        </Tabs>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-coffee-green">Staff Management</h2>
+          <p className="text-gray-600">Manage staff members and monitor performance</p>
+        </div>
+        
+        <Button 
+          onClick={() => setIsAddStaffOpen(true)}
+          className="bg-coffee-green hover:bg-coffee-green/90 flex items-center gap-2"
+        >
+          <UserPlus className="h-4 w-4" />
+          Add Staff
+        </Button>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {mockStaffData.map(staff => (
-          <StaffPerformanceCard 
-            key={staff.staffId}
-            {...staff}
-          />
-        ))}
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
+            <Users className="h-4 w-4 text-coffee-green" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-coffee-green">{totalStaff}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Staff</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{activeStaff}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Today's Sales</CardTitle>
+            <TrendingUp className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              ₹{todaysTotalSales.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Orders Completed</CardTitle>
+            <TrendingUp className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">{todaysOrders}</div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Performance Table */}
+      <Tabs defaultValue="performance" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="performance" className="space-y-4">
+          <StaffPerformanceTable />
+        </TabsContent>
+        
+        <TabsContent value="analytics" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analytics Dashboard</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-500">Analytics features coming soon...</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <AddStaffDrawer 
+        open={isAddStaffOpen} 
+        onOpenChange={setIsAddStaffOpen} 
+      />
     </div>
   );
 };

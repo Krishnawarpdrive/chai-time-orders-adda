@@ -5,7 +5,6 @@ import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import StaffPerformanceDashboard from '@/components/staff/StaffPerformanceDashboard';
-import CouponManager from '@/components/coupons/CouponManager';
 
 const StaffPage = () => {
   return (
@@ -36,20 +35,7 @@ const StaffPage = () => {
         {/* Content */}
         <main className="flex-1 p-3 sm:p-4 md:p-6 bg-milk-sugar overflow-y-auto">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-4 sm:mb-6">
-              <h2 className="font-hackney text-2xl sm:text-3xl text-coffee-green mb-1">Staff Dashboard</h2>
-              <p className="text-gray-600 text-xs sm:text-sm">Monitor staff performance and manage coupons</p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-              <div className="lg:col-span-2 space-y-4 md:space-y-6">
-                <StaffPerformanceDashboard />
-              </div>
-              
-              <div className="space-y-4">
-                <CouponManager />
-              </div>
-            </div>
+            <StaffPerformanceDashboard />
           </div>
         </main>
       </div>

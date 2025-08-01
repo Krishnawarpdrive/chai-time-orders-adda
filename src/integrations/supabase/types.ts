@@ -564,6 +564,133 @@ export type Database = {
           },
         ]
       }
+      staff: {
+        Row: {
+          address: string | null
+          bank_account_number: string | null
+          bank_name: string | null
+          bank_routing_number: string | null
+          created_at: string
+          date_of_birth: string | null
+          department: string | null
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_id: string
+          first_name: string
+          hire_date: string
+          id: string
+          last_name: string
+          outlet_id: string | null
+          phone: string
+          position: string
+          salary: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          bank_routing_number?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          department?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_id: string
+          first_name: string
+          hire_date?: string
+          id?: string
+          last_name: string
+          outlet_id?: string | null
+          phone: string
+          position: string
+          salary?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          bank_routing_number?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          department?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_id?: string
+          first_name?: string
+          hire_date?: string
+          id?: string
+          last_name?: string
+          outlet_id?: string | null
+          phone?: string
+          position?: string
+          salary?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_outlet_id_fkey"
+            columns: ["outlet_id"]
+            isOneToOne: false
+            referencedRelation: "outlets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_performance: {
+        Row: {
+          created_at: string
+          customer_rating: number | null
+          date: string
+          id: string
+          orders_completed: number | null
+          products_sold: number | null
+          shift_hours: number | null
+          staff_id: string | null
+          total_sales: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_rating?: number | null
+          date?: string
+          id?: string
+          orders_completed?: number | null
+          products_sold?: number | null
+          shift_hours?: number | null
+          staff_id?: string | null
+          total_sales?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_rating?: number | null
+          date?: string
+          id?: string
+          orders_completed?: number | null
+          products_sold?: number | null
+          shift_hours?: number | null
+          staff_id?: string | null
+          total_sales?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_performance_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           created_at: string
