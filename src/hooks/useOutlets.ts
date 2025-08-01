@@ -22,7 +22,14 @@ export const useOutlets = () => {
         .order('name');
       
       if (error) throw error;
-      setOutlets(data || []);
+      
+      // Type cast the data to match our TypeScript definitions
+      const typedOutlets = (data || []).map(outlet => ({
+        ...outlet,
+        status: outlet.status as Outlet['status']
+      })) as Outlet[];
+      
+      setOutlets(typedOutlets);
     } catch (err: any) {
       console.error('Error fetching outlets:', err);
       setError(err.message);
@@ -46,13 +53,19 @@ export const useOutlets = () => {
       
       if (error) throw error;
       
-      setOutlets(prev => [...prev, data]);
+      // Type cast the new data
+      const typedData = {
+        ...data,
+        status: data.status as Outlet['status']
+      } as Outlet;
+      
+      setOutlets(prev => [...prev, typedData]);
       toast({
         title: "Success",
         description: "Outlet created successfully.",
       });
       
-      return data;
+      return typedData;
     } catch (err: any) {
       console.error('Error creating outlet:', err);
       toast({
@@ -75,13 +88,19 @@ export const useOutlets = () => {
       
       if (error) throw error;
       
-      setOutlets(prev => prev.map(o => o.id === outletId ? data : o));
+      // Type cast the updated data
+      const typedData = {
+        ...data,
+        status: data.status as Outlet['status']
+      } as Outlet;
+      
+      setOutlets(prev => prev.map(o => o.id === outletId ? typedData : o));
       toast({
         title: "Success",
         description: "Outlet updated successfully.",
       });
       
-      return data;
+      return typedData;
     } catch (err: any) {
       console.error('Error updating outlet:', err);
       toast({

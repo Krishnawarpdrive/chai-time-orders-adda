@@ -24,7 +24,14 @@ export const useVendors = () => {
         .order('name');
       
       if (error) throw error;
-      setVendors(data || []);
+      
+      // Type cast the data to match our TypeScript definitions
+      const typedVendors = (data || []).map(vendor => ({
+        ...vendor,
+        status: vendor.status as Vendor['status']
+      })) as Vendor[];
+      
+      setVendors(typedVendors);
     } catch (err: any) {
       console.error('Error fetching vendors:', err);
       setError(err.message);
@@ -48,7 +55,17 @@ export const useVendors = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setVendorProducts(data || []);
+      
+      // Type cast the data to match our TypeScript definitions
+      const typedVendorProducts = (data || []).map(vp => ({
+        ...vp,
+        vendor: vp.vendor ? {
+          ...vp.vendor,
+          status: vp.vendor.status as Vendor['status']
+        } : undefined
+      })) as VendorProduct[];
+      
+      setVendorProducts(typedVendorProducts);
     } catch (err: any) {
       console.error('Error fetching vendor products:', err);
       setError(err.message);
@@ -67,13 +84,19 @@ export const useVendors = () => {
       
       if (error) throw error;
       
-      setVendors(prev => [...prev, data]);
+      // Type cast the new data
+      const typedData = {
+        ...data,
+        status: data.status as Vendor['status']
+      } as Vendor;
+      
+      setVendors(prev => [...prev, typedData]);
       toast({
         title: "Success",
         description: "Vendor created successfully.",
       });
       
-      return data;
+      return typedData;
     } catch (err: any) {
       console.error('Error creating vendor:', err);
       toast({
@@ -96,13 +119,19 @@ export const useVendors = () => {
       
       if (error) throw error;
       
-      setVendors(prev => prev.map(v => v.id === vendorId ? data : v));
+      // Type cast the updated data
+      const typedData = {
+        ...data,
+        status: data.status as Vendor['status']
+      } as Vendor;
+      
+      setVendors(prev => prev.map(v => v.id === vendorId ? typedData : v));
       toast({
         title: "Success",
         description: "Vendor updated successfully.",
       });
       
-      return data;
+      return typedData;
     } catch (err: any) {
       console.error('Error updating vendor:', err);
       toast({

@@ -31,7 +31,14 @@ export const useDeliveries = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setDeliveries(data || []);
+      
+      // Type cast the data to match our TypeScript definitions
+      const typedDeliveries = (data || []).map(delivery => ({
+        ...delivery,
+        status: delivery.status as Delivery['status']
+      })) as Delivery[];
+      
+      setDeliveries(typedDeliveries);
     } catch (err: any) {
       console.error('Error fetching deliveries:', err);
       setError(err.message);
@@ -60,13 +67,19 @@ export const useDeliveries = () => {
       
       if (error) throw error;
       
-      setDeliveries(prev => prev.map(d => d.id === deliveryId ? { ...d, ...data } : d));
+      // Type cast the updated data
+      const typedData = {
+        ...data,
+        status: data.status as Delivery['status']
+      } as Delivery;
+      
+      setDeliveries(prev => prev.map(d => d.id === deliveryId ? { ...d, ...typedData } : d));
       toast({
         title: "Success",
         description: "Delivery status updated successfully.",
       });
       
-      return data;
+      return typedData;
     } catch (err: any) {
       console.error('Error updating delivery status:', err);
       toast({
