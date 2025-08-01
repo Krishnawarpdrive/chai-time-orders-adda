@@ -18,7 +18,10 @@ export const useStaff = () => {
         throw error;
       }
 
-      return data || [];
+      return (data || []).map(staff => ({
+        ...staff,
+        status: staff.status as 'active' | 'inactive' | 'terminated'
+      }));
     },
   });
 };
@@ -78,6 +81,7 @@ export const useStaffWithPerformance = () => {
         const staffPerformance = performance?.find(p => p.staff_id === staffMember.id);
         return {
           ...staffMember,
+          status: staffMember.status as 'active' | 'inactive' | 'terminated',
           performance: staffPerformance
         };
       }) || [];
@@ -104,7 +108,10 @@ export const useCreateStaff = () => {
         throw error;
       }
 
-      return data;
+      return {
+        ...data,
+        status: data.status as 'active' | 'inactive' | 'terminated'
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] });
@@ -143,7 +150,10 @@ export const useUpdateStaff = () => {
         throw error;
       }
 
-      return data;
+      return {
+        ...data,
+        status: data.status as 'active' | 'inactive' | 'terminated'
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] });

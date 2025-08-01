@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -105,7 +104,11 @@ const AddStaffDrawer = ({ open, onOpenChange }: AddStaffDrawerProps) => {
 
   const onSubmit = async (data: StaffFormData) => {
     const staffData: CreateStaffData = {
-      ...data,
+      employee_id: data.employee_id,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      phone: data.phone,
+      position: data.position,
       salary: data.salary ? parseFloat(data.salary) : undefined,
       email: data.email || undefined,
       date_of_birth: data.date_of_birth || undefined,
