@@ -5,49 +5,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus, Edit, Trash2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-
-interface Vendor {
-  id: string;
-  name: string;
-  contact_person?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  status: 'active' | 'inactive' | 'suspended';
-  created_at: string;
-  updated_at: string;
-}
-
-const mockVendors: Vendor[] = [
-  {
-    id: '1',
-    name: 'Coffee Bean Suppliers',
-    contact_person: 'John Smith',
-    email: 'john@suppliers.com',
-    phone: '+1-555-0456',
-    address: '456 Supplier Ave',
-    status: 'active',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: '2',
-    name: 'Dairy Products Inc',
-    contact_person: 'Jane Doe',
-    email: 'jane@dairy.com',
-    phone: '+1-555-0789',
-    address: '789 Dairy Lane',
-    status: 'inactive',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
+import { useVendors } from '@/hooks/useVendors';
+import { Vendor } from '@/types/inventory-enhanced';
 
 const VendorManagement = () => {
-  const [vendors, setVendors] = useState<Vendor[]>(mockVendors);
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+  const { vendors, loading, error, updateVendor } = useVendors();
 
   const getStatusColor = (status: Vendor['status']) => {
     switch (status) {
@@ -62,19 +24,12 @@ const VendorManagement = () => {
     }
   };
 
-  const handleStatusChange = (vendorId: string, newStatus: Vendor['status']) => {
-    setVendors(prev => 
-      prev.map(vendor => 
-        vendor.id === vendorId 
-          ? { ...vendor, status: newStatus, updated_at: new Date().toISOString() }
-          : vendor
-      )
-    );
-    
-    toast({
-      title: "Success",
-      description: "Vendor status updated successfully.",
-    });
+  const handleStatusChange = async (vendorId: string, newStatus: Vendor['status']) => {
+    try {
+      await updateVendor(vendorId, { status: newStatus });
+    } catch (error) {
+      console.error('Failed to update vendor status:', error);
+    }
   };
 
   if (loading) {
@@ -83,6 +38,16 @@ const VendorManagement = () => {
         <CardContent className="p-8 text-center">
           <div className="animate-spin h-8 w-8 border-4 border-coffee-green border-t-transparent rounded-full mx-auto"></div>
           <p className="mt-4 text-gray-500">Loading vendors...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p className="text-red-500">Error loading vendors: {error}</p>
         </CardContent>
       </Card>
     );
@@ -117,29 +82,37 @@ const VendorManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {vendors.map((vendor) => (
-                  <TableRow key={vendor.id}>
-                    <TableCell className="font-medium">{vendor.name}</TableCell>
-                    <TableCell>{vendor.contact_person}</TableCell>
-                    <TableCell>{vendor.email}</TableCell>
-                    <TableCell>{vendor.phone}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(vendor.status)}>
-                        {vendor.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-1 justify-end">
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                {vendors.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      No vendors found. Add a vendor to get started.
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  vendors.map((vendor) => (
+                    <TableRow key={vendor.id}>
+                      <TableCell className="font-medium">{vendor.name}</TableCell>
+                      <TableCell>{vendor.contact_person || '-'}</TableCell>
+                      <TableCell>{vendor.email || '-'}</TableCell>
+                      <TableCell>{vendor.phone || '-'}</TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(vendor.status)}>
+                          {vendor.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex gap-1 justify-end">
+                          <Button variant="outline" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
