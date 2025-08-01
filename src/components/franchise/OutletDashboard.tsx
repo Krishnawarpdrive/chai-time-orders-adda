@@ -13,7 +13,7 @@ const OutletDashboard = () => {
   
   // Calculate summary metrics
   const totalOutlets = mockOutletData.length;
-  const lowStockOutlets = mockOutletData.filter(outlet => outlet.inventoryStatus === 'Low').length;
+  const lowStockOutlets = mockOutletData.filter(outlet => outlet.inventoryStatus === 'Critical').length;
   const totalOrders = mockOutletData.reduce((sum, outlet) => sum + outlet.orderVolume, 0);
   const pendingOrders = mockOutletData.reduce((sum, outlet) => sum + outlet.pendingOrders, 0);
   

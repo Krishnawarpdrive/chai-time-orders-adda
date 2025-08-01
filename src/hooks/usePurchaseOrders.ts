@@ -1,8 +1,65 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PurchaseOrder, PurchaseOrderItem } from '@/types/inventory-enhanced';
+
+// Mock data for purchase orders since the tables don't exist yet
+const mockPurchaseOrders: PurchaseOrder[] = [
+  {
+    id: '1',
+    po_number: 'PO-2024-001',
+    outlet_id: 'outlet-1',
+    vendor_id: 'vendor-1',
+    franchise_owner_id: 'owner-1',
+    status: 'pending',
+    total_amount: 1500.00,
+    order_date: new Date().toISOString(),
+    expected_delivery_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    notes: 'Regular monthly order',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    outlet: {
+      id: 'outlet-1',
+      name: 'Downtown Coffee',
+      address: '123 Main St',
+      phone: '+1-555-0123',
+      email: 'downtown@coffee.com',
+      franchise_owner_id: 'owner-1',
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    vendor: {
+      id: 'vendor-1',
+      name: 'Coffee Bean Suppliers',
+      contact_person: 'John Smith',
+      email: 'john@suppliers.com',
+      phone: '+1-555-0456',
+      address: '456 Supplier Ave',
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    items: [
+      {
+        id: 'item-1',
+        purchase_order_id: '1',
+        inventory_item_id: 'inv-1',
+        quantity: 50,
+        unit_price: 15.00,
+        total_price: 750.00,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        inventory_item: {
+          id: 'inv-1',
+          name: 'Premium Coffee Beans',
+          unit: 'kg',
+          category: 'Coffee'
+        }
+      }
+    ]
+  }
+];
 
 export const usePurchaseOrders = () => {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
@@ -16,21 +73,10 @@ export const usePurchaseOrders = () => {
 
   const fetchPurchaseOrders = async () => {
     try {
-      const { data, error } = await supabase
-        .from('purchase_orders')
-        .select(`
-          *,
-          outlet:outlets(id, name, address),
-          vendor:vendors(id, name, contact_person),
-          items:purchase_order_items(
-            *,
-            inventory_item:inventory(id, name, unit, category)
-          )
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setPurchaseOrders(data || []);
+      setLoading(true);
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setPurchaseOrders(mockPurchaseOrders);
     } catch (err: any) {
       console.error('Error fetching purchase orders:', err);
       setError(err.message);
@@ -49,40 +95,32 @@ export const usePurchaseOrders = () => {
     items: Omit<PurchaseOrderItem, 'id' | 'purchase_order_id' | 'created_at' | 'updated_at'>[]
   ) => {
     try {
-      // Create the purchase order
-      const { data: poData, error: poError } = await supabase
-        .from('purchase_orders')
-        .insert(orderData)
-        .select()
-        .single();
+      const newId = `po-${Date.now()}`;
+      const poNumber = `PO-${new Date().getFullYear()}-${String(purchaseOrders.length + 1).padStart(3, '0')}`;
       
-      if (poError) throw poError;
+      const newOrder: PurchaseOrder = {
+        ...orderData,
+        id: newId,
+        po_number: poNumber,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        items: items.map((item, index) => ({
+          ...item,
+          id: `item-${newId}-${index}`,
+          purchase_order_id: newId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }))
+      };
       
-      // Create purchase order items
-      const itemsWithPoId = items.map(item => ({
-        ...item,
-        purchase_order_id: poData.id
-      }));
-      
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('purchase_order_items')
-        .insert(itemsWithPoId)
-        .select(`
-          *,
-          inventory_item:inventory(id, name, unit, category)
-        `);
-      
-      if (itemsError) throw itemsError;
-      
-      const completeOrder = { ...poData, items: itemsData };
-      setPurchaseOrders(prev => [completeOrder, ...prev]);
+      setPurchaseOrders(prev => [newOrder, ...prev]);
       
       toast({
         title: "Success",
-        description: `Purchase order ${poData.po_number} created successfully.`,
+        description: `Purchase order ${poNumber} created successfully.`,
       });
       
-      return completeOrder;
+      return newOrder;
     } catch (err: any) {
       console.error('Error creating purchase order:', err);
       toast({
@@ -96,23 +134,20 @@ export const usePurchaseOrders = () => {
 
   const updatePurchaseOrderStatus = async (orderId: string, status: PurchaseOrder['status']) => {
     try {
-      const { data, error } = await supabase
-        .from('purchase_orders')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', orderId)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      setPurchaseOrders(prev => prev.map(po => po.id === orderId ? { ...po, status } : po));
+      setPurchaseOrders(prev => 
+        prev.map(po => 
+          po.id === orderId 
+            ? { ...po, status, updated_at: new Date().toISOString() } 
+            : po
+        )
+      );
       
       toast({
         title: "Success",
         description: `Purchase order status updated to ${status}.`,
       });
       
-      return data;
+      return { success: true };
     } catch (err: any) {
       console.error('Error updating purchase order:', err);
       toast({
